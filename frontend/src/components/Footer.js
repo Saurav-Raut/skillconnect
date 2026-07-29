@@ -163,20 +163,24 @@ const Footer = () => {
               padding: '16px',
               borderRadius: '12px',
               display: 'inline-block',
-              marginBottom: '22px'
+              marginBottom: '20px'
             }}>
-              <svg width="150" height="150" viewBox="0 0 33 33">
-                <path
-                  fill="#0F172A"
-                  d="M0 0h14v14H0V0zm2 2v10h10V2H2zm2 2h6v6H4V4zM19 0h14v14H19V0zm2 2v10h10V2H21zm2 2h6v6h-6V4zM0 19h14v14H0V19zm2 2v10h10V21H2zm2 2h6v6H4v-6zM17 17h2v2h-2v-2zm4 0h2v2h-2v-2zm4 0h2v4h-2v-4zm4 0h4v2h-4v-2zm-8 4h2v2h-2v-2zm8 0h4v4h-2v-2h-2v-2zm-12 2h2v4h-2v-4zm4 0h4v2h-4v-2zm4 2h2v2h-2v-2zm-4 2h2v2h-2v-2zm4 0h4v4h-4v-4zm-8 2h4v2h-4v-2zm-4 2h4v2h-4v-2z"
-                />
-              </svg>
+              <img
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent('https://expo.dev/client')}`}
+                alt="Scan to download Expo Go on iOS and Android"
+                style={{ width: '150px', height: '150px', display: 'block' }}
+              />
             </div>
+
+            <p style={{ color: 'rgba(255, 255, 255, 0.75)', fontSize: '0.84rem', lineHeight: '1.5', marginBottom: '20px', background: 'rgba(255,255,255,0.05)', padding: '10px 14px', borderRadius: '10px' }}>
+              <b>How to connect:</b> Scan above to install <b>Expo Go</b> on your phone, then run <code style={{ color: '#60A5FA' }}>npx expo start</code> in <code style={{ color: '#60A5FA' }}>/mobile</code> and scan the terminal QR code!
+            </p>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               <a
-                href="/skillconnect-mobile.apk"
-                download
+                href="https://expo.dev/client"
+                target="_blank"
+                rel="noopener noreferrer"
                 style={{
                   background: '#2563EB',
                   color: '#fff',
@@ -188,7 +192,26 @@ const Footer = () => {
                   display: 'block'
                 }}
               >
-                📥 Download Android APK (v1.0.0)
+                📥 Get Expo Go App (iOS & Android)
+              </a>
+
+              <a
+                href="https://docs.expo.dev/build/setup/"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  background: 'rgba(255, 255, 255, 0.08)',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  color: '#fff',
+                  textDecoration: 'none',
+                  padding: '10px 18px',
+                  borderRadius: '10px',
+                  fontWeight: '600',
+                  fontSize: '0.85rem',
+                  display: 'block'
+                }}
+              >
+                🛠️ How to Build Standalone APK (EAS CLI)
               </a>
 
               <button
