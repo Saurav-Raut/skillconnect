@@ -2,7 +2,7 @@ export const API_BASE_URL = (process.env.REACT_APP_API_URL || process.env.EXPO_P
   ? ((process.env.REACT_APP_API_URL || process.env.EXPO_PUBLIC_API_URL).endsWith('/api')
     ? (process.env.REACT_APP_API_URL || process.env.EXPO_PUBLIC_API_URL)
     : `${process.env.REACT_APP_API_URL || process.env.EXPO_PUBLIC_API_URL}/api`)
-  : 'http://localhost:5000/api';
+  : 'https://skillconnect-backend-97u2.onrender.com/api';
 
 export const SKILL_CATEGORIES = [
   'Electrician',

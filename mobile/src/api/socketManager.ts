@@ -1,7 +1,7 @@
 import { io, Socket } from 'socket.io-client';
 import { AppState, AppStateStatus } from 'react-native';
 
-const SOCKET_URL = 'http://10.0.2.2:5000'; // Default Android emulator host loopback, or API server
+const SOCKET_URL = process.env.EXPO_PUBLIC_API_URL || 'https://skillconnect-backend-97u2.onrender.com';
 
 class SocketManager {
   private socket: Socket | null = null;

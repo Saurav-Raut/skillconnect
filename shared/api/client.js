@@ -11,7 +11,7 @@ const getApiBaseUrl = () => {
       return `http://${window.location.hostname}:5000/api`;
     }
   }
-  return 'http://localhost:5000/api';
+  return 'https://skillconnect-backend-97u2.onrender.com/api';
 };
 
 const API = axios.create({
