@@ -5,7 +5,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { store, AppDispatch, RootState } from './src/redux/store';
 import { initializeSecureStorage } from './src/api/setupStorage';
 import { AuthStack } from './src/navigation/AuthStack';
-import { MainTabs } from './src/navigation/MainTabs';
+import { MainStack } from './src/navigation/MainStack';
 import { Colors } from './src/theme/colors';
 
 const RootNavigator = () => {
@@ -29,13 +29,12 @@ const RootNavigator = () => {
     );
   }
 
-  // Choose navigation stack based on authentication status
   const isAuthenticated = Boolean(token || userInfo);
 
   return (
     <NavigationContainer>
       <StatusBar barStyle="dark-content" backgroundColor={Colors.background} />
-      {isAuthenticated ? <MainTabs /> : <AuthStack />}
+      {isAuthenticated ? <MainStack /> : <AuthStack />}
     </NavigationContainer>
   );
 };
