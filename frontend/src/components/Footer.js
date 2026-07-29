@@ -1,8 +1,7 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 
 const Footer = () => {
-  const [showQrModal, setShowQrModal] = useState(false);
 
   return (
     <footer style={{
@@ -47,8 +46,9 @@ const Footer = () => {
               Safety-first, trust-driven booking for local skilled workers — verified identity, live tracking, and escrow-protected payments on every job.
             </p>
 
-            <button
-              onClick={() => setShowQrModal(true)}
+            <a
+              href="/SkillConnect.apk"
+              download="SkillConnect.apk"
               style={{
                 background: 'rgba(37, 99, 235, 0.18)',
                 border: '1px solid #3B82F6',
@@ -58,16 +58,17 @@ const Footer = () => {
                 cursor: 'pointer',
                 fontWeight: '600',
                 fontSize: '0.82rem',
-                display: 'flex',
+                display: 'inline-flex',
                 alignItems: 'center',
                 gap: '8px',
+                textDecoration: 'none',
                 transition: 'all 0.2s'
               }}
-              title="Download APK / Scan Expo Go QR Code"
+              title="Download SkillConnect Android APK"
             >
               <span>📱</span>
               <span>Download Mobile App (EAS)</span>
-            </button>
+            </a>
           </div>
 
           <div className="footer-col">
@@ -120,119 +121,7 @@ const Footer = () => {
         </div>
       </div>
 
-      {showQrModal && (
-        <div
-          onClick={() => setShowQrModal(false)}
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: 'rgba(15, 23, 42, 0.82)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 99999,
-            padding: '20px'
-          }}
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              background: '#0F172A',
-              border: '1px solid rgba(255, 255, 255, 0.15)',
-              borderRadius: '16px',
-              padding: '32px',
-              maxWidth: '380px',
-              width: '100%',
-              textAlign: 'center',
-              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
-            }}
-          >
-            <div style={{ fontSize: '2.5rem', marginBottom: '12px' }}>📱</div>
-            <h3 style={{ color: '#fff', fontSize: '1.25rem', marginBottom: '6px' }}>
-              SkillConnect Mobile App
-            </h3>
-            <p style={{ color: 'rgba(255, 255, 255, 0.65)', fontSize: '0.86rem', lineHeight: '1.5', marginBottom: '20px' }}>
-              Scan the QR code with your phone camera or Expo Go to test real-time booking and biometric face verification on iOS & Android.
-            </p>
 
-            <div style={{
-              background: '#fff',
-              padding: '16px',
-              borderRadius: '12px',
-              display: 'inline-block',
-              marginBottom: '20px'
-            }}>
-              <img
-                src={`https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent('https://expo.dev/client')}`}
-                alt="Scan to download Expo Go on iOS and Android"
-                style={{ width: '150px', height: '150px', display: 'block' }}
-              />
-            </div>
-
-            <p style={{ color: 'rgba(255, 255, 255, 0.75)', fontSize: '0.84rem', lineHeight: '1.5', marginBottom: '20px', background: 'rgba(255,255,255,0.05)', padding: '10px 14px', borderRadius: '10px' }}>
-              <b>How to connect:</b> Scan above to install <b>Expo Go</b> on your phone, then run <code style={{ color: '#60A5FA' }}>npx expo start</code> in <code style={{ color: '#60A5FA' }}>/mobile</code> and scan the terminal QR code!
-            </p>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              <a
-                href="https://expo.dev/client"
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  background: '#2563EB',
-                  color: '#fff',
-                  textDecoration: 'none',
-                  padding: '12px 18px',
-                  borderRadius: '10px',
-                  fontWeight: '600',
-                  fontSize: '0.9rem',
-                  display: 'block'
-                }}
-              >
-                📥 Get Expo Go App (iOS & Android)
-              </a>
-
-              <a
-                href="https://docs.expo.dev/build/setup/"
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  background: 'rgba(255, 255, 255, 0.08)',
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
-                  color: '#fff',
-                  textDecoration: 'none',
-                  padding: '10px 18px',
-                  borderRadius: '10px',
-                  fontWeight: '600',
-                  fontSize: '0.85rem',
-                  display: 'block'
-                }}
-              >
-                🛠️ How to Build Standalone APK (EAS CLI)
-              </a>
-
-              <button
-                onClick={() => setShowQrModal(false)}
-                style={{
-                  background: 'transparent',
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
-                  color: 'rgba(255, 255, 255, 0.8)',
-                  padding: '10px 18px',
-                  borderRadius: '10px',
-                  cursor: 'pointer',
-                  fontWeight: '600',
-                  fontSize: '0.88rem'
-                }}
-              >
-                Close Window
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       <style>{`
         .footer-top {
