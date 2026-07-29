@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@skillconnect/shared": "file:../shared",
     "@reduxjs/toolkit": "^2.2.3",
     "axios": "^1.6.8",
     "leaflet": "^1.9.4",

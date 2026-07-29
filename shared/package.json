@@ -1,0 +1,10 @@
+{
+  "name": "@skillconnect/shared",
+  "version": "1.0.0",
+  "description": "Shared business logic, Redux slices, API service layer, validation, and constants for SkillConnect Web and Mobile apps",
+  "main": "index.js",
+  "dependencies": {
+    "@reduxjs/toolkit": "^2.2.3",
+    "axios": "^1.6.8"
+  }
+}
