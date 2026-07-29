@@ -6,6 +6,8 @@ import { store, AppDispatch, RootState } from './src/redux/store';
 import { initializeSecureStorage } from './src/api/setupStorage';
 import { AuthStack } from './src/navigation/AuthStack';
 import { MainStack } from './src/navigation/MainStack';
+import { OfflineBanner } from './src/components/OfflineBanner';
+import { registerForPushNotificationsAsync } from './src/api/notifications';
 import { Colors } from './src/theme/colors';
 
 const RootNavigator = () => {
@@ -16,6 +18,7 @@ const RootNavigator = () => {
   useEffect(() => {
     const setup = async () => {
       await initializeSecureStorage();
+      await registerForPushNotificationsAsync();
       setInitializing(false);
     };
     setup();
@@ -34,6 +37,7 @@ const RootNavigator = () => {
   return (
     <NavigationContainer>
       <StatusBar barStyle="dark-content" backgroundColor={Colors.background} />
+      <OfflineBanner />
       {isAuthenticated ? <MainStack /> : <AuthStack />}
     </NavigationContainer>
   );
