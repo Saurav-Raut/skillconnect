@@ -121,6 +121,28 @@ module.exports = (io) => {
       console.log(`User ${userId} joined room for booking_${bookingId}`);
     });
 
+    // Cross-Platform alias handlers for Web + Mobile real-time sync
+    socket.on('join_booking_room', (bookingId) => {
+      socket.join(`booking_${bookingId}`);
+    });
+
+    socket.on('join_location_room', (roomId) => {
+      socket.join(roomId);
+    });
+
+    socket.on('location_update', (data) => {
+      if (data && data.roomId) {
+        io.to(data.roomId).emit('worker_location_update', data);
+      }
+    });
+
+    socket.on('booking_status_change', (data) => {
+      if (data && data.bookingId) {
+        io.to(`booking_${data.bookingId}`).emit('booking_status_updated', data);
+      }
+    });
+
+
     // Rate-limited two-way location streaming (max once per 3-5 seconds per user/worker)
     socket.on('updateLocation', async ({ workerId, bookingId, coordinates, role = 'worker' }) => {
       if (!coordinates || coordinates.length !== 2) return;

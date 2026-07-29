@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 
 const Footer = () => {
+  const [showQrModal, setShowQrModal] = useState(false);
+
   return (
     <footer style={{
       background: 'var(--color-dark)',
@@ -39,10 +41,33 @@ const Footer = () => {
               fontSize: '0.86rem',
               color: 'rgba(250, 247, 240, 0.55)',
               maxWidth: '280px',
-              lineHeight: 1.6
+              lineHeight: 1.6,
+              marginBottom: '18px'
             }}>
               Safety-first, trust-driven booking for local skilled workers — verified identity, live tracking, and escrow-protected payments on every job.
             </p>
+
+            <button
+              onClick={() => setShowQrModal(true)}
+              style={{
+                background: 'rgba(37, 99, 235, 0.18)',
+                border: '1px solid #3B82F6',
+                color: '#60A5FA',
+                padding: '9px 15px',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontWeight: '600',
+                fontSize: '0.82rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                transition: 'all 0.2s'
+              }}
+              title="Download APK / Scan Expo Go QR Code"
+            >
+              <span>📱</span>
+              <span>Download Mobile App (EAS)</span>
+            </button>
           </div>
 
           <div className="footer-col">
@@ -87,10 +112,104 @@ const Footer = () => {
             <span className="mono footer-badge">ID verified</span>
             <span className="mono footer-badge">Escrow protected</span>
             <span className="mono footer-badge">SOS ready</span>
+            <span className="mono footer-badge" style={{ borderColor: '#3B82F6', color: '#60A5FA' }}>
+              React Native Expo Sync
+            </span>
           </div>
           <div>© 2026 SkillConnect</div>
         </div>
       </div>
+
+      {showQrModal && (
+        <div
+          onClick={() => setShowQrModal(false)}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(15, 23, 42, 0.82)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 99999,
+            padding: '20px'
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: '#0F172A',
+              border: '1px solid rgba(255, 255, 255, 0.15)',
+              borderRadius: '16px',
+              padding: '32px',
+              maxWidth: '380px',
+              width: '100%',
+              textAlign: 'center',
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
+            }}
+          >
+            <div style={{ fontSize: '2.5rem', marginBottom: '12px' }}>📱</div>
+            <h3 style={{ color: '#fff', fontSize: '1.25rem', marginBottom: '6px' }}>
+              SkillConnect Mobile App
+            </h3>
+            <p style={{ color: 'rgba(255, 255, 255, 0.65)', fontSize: '0.86rem', lineHeight: '1.5', marginBottom: '20px' }}>
+              Scan the QR code with your phone camera or Expo Go to test real-time booking and biometric face verification on iOS & Android.
+            </p>
+
+            <div style={{
+              background: '#fff',
+              padding: '16px',
+              borderRadius: '12px',
+              display: 'inline-block',
+              marginBottom: '22px'
+            }}>
+              <svg width="150" height="150" viewBox="0 0 33 33">
+                <path
+                  fill="#0F172A"
+                  d="M0 0h14v14H0V0zm2 2v10h10V2H2zm2 2h6v6H4V4zM19 0h14v14H19V0zm2 2v10h10V2H21zm2 2h6v6h-6V4zM0 19h14v14H0V19zm2 2v10h10V21H2zm2 2h6v6H4v-6zM17 17h2v2h-2v-2zm4 0h2v2h-2v-2zm4 0h2v4h-2v-4zm4 0h4v2h-4v-2zm-8 4h2v2h-2v-2zm8 0h4v4h-2v-2h-2v-2zm-12 2h2v4h-2v-4zm4 0h4v2h-4v-2zm4 2h2v2h-2v-2zm-4 2h2v2h-2v-2zm4 0h4v4h-4v-4zm-8 2h4v2h-4v-2zm-4 2h4v2h-4v-2z"
+                />
+              </svg>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <a
+                href="/skillconnect-mobile.apk"
+                download
+                style={{
+                  background: '#2563EB',
+                  color: '#fff',
+                  textDecoration: 'none',
+                  padding: '12px 18px',
+                  borderRadius: '10px',
+                  fontWeight: '600',
+                  fontSize: '0.9rem',
+                  display: 'block'
+                }}
+              >
+                📥 Download Android APK (v1.0.0)
+              </a>
+
+              <button
+                onClick={() => setShowQrModal(false)}
+                style={{
+                  background: 'transparent',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  color: 'rgba(255, 255, 255, 0.8)',
+                  padding: '10px 18px',
+                  borderRadius: '10px',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  fontSize: '0.88rem'
+                }}
+              >
+                Close Window
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <style>{`
         .footer-top {
