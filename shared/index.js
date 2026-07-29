@@ -1,9 +1,14 @@
 export { default as API } from './api/client';
-export * from './api/storage';
+export { default as userReducer } from './redux/userSlice';
 export * from './redux/userSlice';
+export { default as bookingReducer } from './redux/bookingSlice';
 export * from './redux/bookingSlice';
+export { default as workerReducer } from './redux/workerSlice';
 export * from './redux/workerSlice';
+export { default as complaintReducer } from './redux/complaintSlice';
 export * from './redux/complaintSlice';
+export { default as appealReducer } from './redux/appealSlice';
 export * from './redux/appealSlice';
+export * from './api/storage';
 export * from './constants';
 export * from './utils/geo';
