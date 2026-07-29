@@ -5,7 +5,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { fetchBookings, fundEscrow } from '@skillconnect/shared';
 import { AppDispatch, RootState } from '../redux/store';
 import { CustomButton } from '../components/CustomButton';
-import { Colors, Spacing, Radius } from '../theme/colors';
+import { Colors, Spacing, Radius, Typography } from '../theme/colors';
 
 export const BookingsScreen = ({ navigation }: any) => {
   const dispatch = useDispatch<AppDispatch>();
@@ -107,7 +107,7 @@ export const BookingsScreen = ({ navigation }: any) => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: Colors.bgMain,
   },
   header: {
     paddingHorizontal: Spacing.lg,
@@ -115,8 +115,8 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.sm,
   },
   headerTitle: {
-    fontSize: 24,
-    fontWeight: '800',
+    fontSize: 26,
+    fontFamily: Typography.fontFamily.heading,
     color: Colors.text,
   },
   scroll: {
@@ -124,7 +124,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
   },
   emptyBox: {
-    backgroundColor: Colors.white,
+    backgroundColor: Colors.bgCard,
     borderRadius: Radius.lg,
     padding: Spacing.xl,
     alignItems: 'center',
@@ -134,18 +134,18 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontSize: 18,
-    fontWeight: '700',
+    fontFamily: Typography.fontFamily.heading,
     color: Colors.text,
     marginBottom: Spacing.xs,
   },
   emptySub: {
     fontSize: 14,
-    color: Colors.textMuted,
+    color: Colors.textMain,
     textAlign: 'center',
     lineHeight: 20,
   },
   card: {
-    backgroundColor: Colors.white,
+    backgroundColor: Colors.bgCard,
     borderRadius: Radius.md,
     padding: Spacing.lg,
     marginBottom: Spacing.md,
@@ -175,7 +175,7 @@ const styles = StyleSheet.create({
   priceText: {
     fontSize: 20,
     fontWeight: '800',
-    color: Colors.primary,
+    color: '#A5B4FC',
     marginBottom: 4,
   },
   metaText: {

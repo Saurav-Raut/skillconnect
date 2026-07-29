@@ -12,3 +12,6 @@ export * from './redux/appealSlice';
 export * from './api/storage';
 export * from './constants';
 export * from './utils/geo';
+export * from './theme/colors';
+export * from './theme/typography';
+export * from './theme/spacing';

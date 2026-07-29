@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useFocusEffect } from '@react-navigation/native';
 import { fetchBookings, fetchMe } from '@skillconnect/shared';
 import { AppDispatch, RootState } from '../redux/store';
-import { Colors, Spacing, Radius } from '../theme/colors';
+import { Colors, Spacing, Radius, Typography } from '../theme/colors';
 
 export const HomeScreen = ({ navigation }: any) => {
   const dispatch = useDispatch<AppDispatch>();
@@ -24,6 +24,14 @@ export const HomeScreen = ({ navigation }: any) => {
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.scroll}>
         <View style={styles.header}>
+          <View style={styles.badgeRow}>
+            <View style={styles.badgeVerified}>
+              <Text style={styles.badgeVerifiedText}>● Verified Partner</Text>
+            </View>
+            <View style={styles.badgeEscrow}>
+              <Text style={styles.badgeEscrowText}>🔒 Escrow Protected</Text>
+            </View>
+          </View>
           <Text style={styles.greeting}>Hello, {userInfo?.name || 'User'} 👋</Text>
           <Text style={styles.roleLabel}>
             {isWorker ? 'Worker Partner Dashboard' : 'Household Booking Dashboard'}
@@ -79,7 +87,7 @@ export const HomeScreen = ({ navigation }: any) => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: Colors.bgMain,
   },
   scroll: {
     padding: Spacing.lg,
@@ -87,41 +95,72 @@ const styles = StyleSheet.create({
   header: {
     marginBottom: Spacing.lg,
   },
+  badgeRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: Spacing.sm,
+  },
+  badgeVerified: {
+    backgroundColor: 'rgba(47, 158, 104, 0.2)',
+    borderColor: Colors.verified,
+    borderWidth: 1,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: Radius.full,
+  },
+  badgeVerifiedText: {
+    color: '#34D399',
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  badgeEscrow: {
+    backgroundColor: 'rgba(244, 169, 59, 0.2)',
+    borderColor: Colors.warning,
+    borderWidth: 1,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: Radius.full,
+  },
+  badgeEscrowText: {
+    color: '#FBBF24',
+    fontSize: 11,
+    fontWeight: '700',
+  },
   greeting: {
-    fontSize: 24,
-    fontWeight: '800',
+    fontSize: 26,
+    fontFamily: Typography.fontFamily.heading,
     color: Colors.text,
   },
   roleLabel: {
     fontSize: 14,
     color: Colors.textMuted,
-    marginTop: 2,
+    marginTop: 4,
   },
   banner: {
-    backgroundColor: Colors.primaryLight,
+    backgroundColor: Colors.bgCard,
     borderRadius: Radius.lg,
     padding: Spacing.lg,
     marginBottom: Spacing.xl,
     borderWidth: 1,
-    borderColor: '#BFDBFE',
+    borderColor: Colors.border,
   },
   bannerTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: Colors.primaryDark,
-    marginBottom: 4,
+    fontSize: 18,
+    fontFamily: Typography.fontFamily.heading,
+    color: '#A5B4FC',
+    marginBottom: 6,
   },
   bannerText: {
     fontSize: 14,
-    color: Colors.text,
+    color: Colors.textMain,
     lineHeight: 20,
   },
   sectionHeader: {
     marginBottom: Spacing.md,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: '700',
+    fontSize: 20,
+    fontFamily: Typography.fontFamily.heading,
     color: Colors.text,
   },
   actionGrid: {
@@ -130,7 +169,7 @@ const styles = StyleSheet.create({
   },
   actionCard: {
     flex: 1,
-    backgroundColor: Colors.white,
+    backgroundColor: Colors.bgCard,
     borderRadius: Radius.md,
     padding: Spacing.md,
     borderWidth: 1,
@@ -144,10 +183,10 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '700',
     color: Colors.text,
-    marginBottom: 2,
+    marginBottom: 4,
   },
   actionSub: {
-    fontSize: 12,
+    fontSize: 13,
     color: Colors.textMuted,
   },
 });

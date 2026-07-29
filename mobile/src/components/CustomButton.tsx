@@ -62,7 +62,7 @@ export const CustomButton: React.FC<CustomButtonProps> = ({
 const styles = StyleSheet.create({
   container: {
     height: 52,
-    borderRadius: Radius.md,
+    borderRadius: Radius.full,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: Spacing.lg,

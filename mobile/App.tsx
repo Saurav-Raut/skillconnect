@@ -2,6 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { View, ActivityIndicator, StyleSheet, StatusBar } from 'react-native';
 import { Provider, useDispatch, useSelector } from 'react-redux';
 import { NavigationContainer } from '@react-navigation/native';
+import { useFonts } from 'expo-font';
+import { Fraunces_700Bold, Fraunces_800ExtraBold } from '@expo-google-fonts/fraunces';
+import {
+  PublicSans_400Regular,
+  PublicSans_600SemiBold,
+  PublicSans_700Bold
+} from '@expo-google-fonts/public-sans';
 import { fetchMe } from '@skillconnect/shared';
 import { store, AppDispatch, RootState } from './src/redux/store';
 import { initializeSecureStorage } from './src/api/setupStorage';
@@ -16,6 +23,14 @@ const RootNavigator = () => {
   const { token, userInfo } = useSelector((state: RootState) => state.user);
   const [initializing, setInitializing] = useState(true);
 
+  const [fontsLoaded] = useFonts({
+    Fraunces: Fraunces_700Bold,
+    FrauncesBold: Fraunces_800ExtraBold,
+    PublicSans: PublicSans_400Regular,
+    PublicSansSemiBold: PublicSans_600SemiBold,
+    PublicSansBold: PublicSans_700Bold,
+  });
+
   useEffect(() => {
     const setup = async () => {
       const storedToken = await initializeSecureStorage();
@@ -28,7 +43,7 @@ const RootNavigator = () => {
     setup();
   }, [dispatch]);
 
-  if (initializing) {
+  if (initializing || !fontsLoaded) {
     return (
       <View style={styles.loaderContainer}>
         <ActivityIndicator size="large" color={Colors.primary} />
@@ -40,7 +55,7 @@ const RootNavigator = () => {
 
   return (
     <NavigationContainer>
-      <StatusBar barStyle="dark-content" backgroundColor={Colors.background} />
+      <StatusBar barStyle="light-content" backgroundColor={Colors.bgMain} />
       <OfflineBanner />
       {isAuthenticated ? <MainStack /> : <AuthStack />}
     </NavigationContainer>

@@ -23,7 +23,7 @@ import {
 import { AppDispatch, RootState } from '../redux/store';
 import { CustomButton } from '../components/CustomButton';
 import { RapidoIncomingModal } from '../components/RapidoIncomingModal';
-import { Colors, Spacing, Radius } from '../theme/colors';
+import { Colors, Spacing, Radius, Typography } from '../theme/colors';
 
 // Try importing react-native-maps safely
 let MapView: any = null;
@@ -81,6 +81,7 @@ export const MapScreen = ({ navigation }: any) => {
   const [selectedSkill, setSelectedSkill] = useState<string>('Electrician');
   const [selectedWorker, setSelectedWorker] = useState<any | null>(null);
   const [isOnline, setIsOnline] = useState(true);
+  const [useGoogleMaps, setUseGoogleMaps] = useState(false);
 
   // Incoming Job Modal state for Workers
   const [incomingModalVisible, setIncomingModalVisible] = useState(false);
@@ -89,16 +90,16 @@ export const MapScreen = ({ navigation }: any) => {
   const rawWorkers = (workersList && workersList.length > 0) ? workersList : MOCK_WORKERS;
   const normalizedWorkers = rawWorkers.map((w: any, idx: number) => ({
     _id: w._id || `worker_${idx}`,
-    name: w.name || (w.user && w.user.name) || 'Skilled Partner',
+    name: w.name || w.user?.name || `Worker ${idx + 1}`,
     skillCategory: w.skillCategory || w.skill || 'Electrician',
-    hourlyRate: w.hourlyRate || w.ratePerHour || w.rate || 350,
-    rating: w.rating || w.ratingAvg || 4.8,
-    distanceKm: w.distanceKm || 1.2,
-    coords: w.coords || (w.location && w.location.coordinates) || [72.8805, 19.0805],
-    raw: w
+    hourlyRate: w.hourlyRate || 350,
+    rating: w.rating || 4.8,
+    coords: w.coords || w.location?.coordinates || [72.8805 + idx * 0.003, 19.0805 + idx * 0.003],
+    distanceKm: w.distanceKm || (0.8 + idx * 0.4)
   }));
-  const filteredWorkers = normalizedWorkers.filter((w: any) =>
-    String(w.skillCategory).toLowerCase() === String(selectedSkill).toLowerCase()
+
+  const filteredWorkers = normalizedWorkers.filter(
+    (w) => w.skillCategory.toLowerCase() === selectedSkill.toLowerCase()
   );
 
   const handleBookWorker = async (worker: any) => {
@@ -162,14 +163,24 @@ export const MapScreen = ({ navigation }: any) => {
         <Text style={styles.headerTitle}>
           {isWorker ? 'Worker Rapido Radar' : 'Find Nearby Workers'}
         </Text>
-        {isWorker ? (
+        <View style={styles.headerRight}>
           <TouchableOpacity
-            style={[styles.statusToggle, isOnline ? styles.toggleOnline : styles.toggleOffline]}
-            onPress={() => setIsOnline(!isOnline)}
+            style={styles.mapToggleBtn}
+            onPress={() => setUseGoogleMaps(!useGoogleMaps)}
           >
-            <Text style={styles.toggleText}>{isOnline ? '● ONLINE' : '○ OFFLINE'}</Text>
+            <Text style={styles.mapToggleText}>
+              {useGoogleMaps ? '📡 Radar' : '🗺️ Map'}
+            </Text>
           </TouchableOpacity>
-        ) : null}
+          {isWorker ? (
+            <TouchableOpacity
+              style={[styles.statusToggle, isOnline ? styles.toggleOnline : styles.toggleOffline]}
+              onPress={() => setIsOnline(!isOnline)}
+            >
+              <Text style={styles.toggleText}>{isOnline ? '● ONLINE' : '○ OFFLINE'}</Text>
+            </TouchableOpacity>
+          ) : null}
+        </View>
       </View>
 
       {!isWorker ? (
@@ -194,7 +205,7 @@ export const MapScreen = ({ navigation }: any) => {
       ) : null}
 
       <View style={styles.mapContainer}>
-        {MapView && Marker ? (
+        {MapView && Marker && useGoogleMaps ? (
           <MapView
             style={styles.map}
             initialRegion={{
@@ -324,14 +335,32 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.md,
-    backgroundColor: Colors.white,
+    backgroundColor: Colors.dark,
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
   },
   headerTitle: {
     fontSize: 20,
-    fontWeight: '800',
+    fontFamily: Typography.fontFamily.heading,
     color: Colors.text,
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  mapToggleBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: Radius.full,
+    backgroundColor: 'rgba(99, 102, 241, 0.2)',
+    borderWidth: 1,
+    borderColor: Colors.primary,
+  },
+  mapToggleText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#A5B4FC',
   },
   statusToggle: {
     paddingHorizontal: 14,
@@ -350,20 +379,21 @@ const styles = StyleSheet.create({
     color: '#0F172A',
   },
   skillBar: {
-    backgroundColor: Colors.white,
+    backgroundColor: Colors.bgMain,
     paddingVertical: Spacing.sm,
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
   },
   skillScroll: {
     paddingHorizontal: Spacing.lg,
-    gap: 8,
+    paddingRight: 80,
+    gap: 10,
   },
   skillChip: {
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: Radius.full,
-    backgroundColor: Colors.background,
+    backgroundColor: Colors.bgCard,
     borderWidth: 1,
     borderColor: Colors.border,
   },
@@ -373,7 +403,7 @@ const styles = StyleSheet.create({
   },
   skillText: {
     fontSize: 13,
-    color: Colors.text,
+    color: Colors.textMain,
   },
   skillTextActive: {
     color: Colors.white,
@@ -483,13 +513,15 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: Colors.white,
+    backgroundColor: Colors.bgCard,
     borderTopLeftRadius: Radius.lg,
     borderTopRightRadius: Radius.lg,
     padding: Spacing.xl,
+    borderWidth: 1,
+    borderColor: Colors.border,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.15,
+    shadowOpacity: 0.35,
     shadowRadius: 10,
     elevation: 20,
   },
@@ -500,8 +532,8 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.sm,
   },
   workerName: {
-    fontSize: 20,
-    fontWeight: '800',
+    fontSize: 22,
+    fontFamily: Typography.fontFamily.heading,
     color: Colors.text,
   },
   workerMeta: {

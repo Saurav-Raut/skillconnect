@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">SkillConnect</string>
+    <string name="title_activity_main">SkillConnect</string>
+    <string name="package_name">com.skillconnect.app</string>
+    <string name="custom_url_scheme">com.skillconnect.app</string>
+</resources>

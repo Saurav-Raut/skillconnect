@@ -3,8 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@skillconnect/shared": "file:../shared",
+    "@capacitor/android": "^8.4.2",
+    "@capacitor/cli": "^8.4.2",
+    "@capacitor/core": "^8.4.2",
     "@reduxjs/toolkit": "^2.2.3",
+    "@skillconnect/shared": "file:../shared",
     "axios": "^1.6.8",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.368.0",

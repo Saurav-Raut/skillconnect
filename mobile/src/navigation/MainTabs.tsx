@@ -17,7 +17,7 @@ export const MainTabs = () => {
         tabBarActiveTintColor: Colors.primary,
         tabBarInactiveTintColor: Colors.textMuted,
         tabBarStyle: {
-          backgroundColor: Colors.white,
+          backgroundColor: Colors.dark,
           borderTopWidth: 1,
           borderTopColor: Colors.border,
           height: 60,

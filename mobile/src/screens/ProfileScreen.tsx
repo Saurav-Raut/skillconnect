@@ -5,7 +5,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { logout, fetchMe } from '@skillconnect/shared';
 import { AppDispatch, RootState } from '../redux/store';
 import { CustomButton } from '../components/CustomButton';
-import { Colors, Spacing, Radius } from '../theme/colors';
+import { Colors, Spacing, Radius, Typography } from '../theme/colors';
 
 export const ProfileScreen = ({ navigation }: any) => {
   const dispatch = useDispatch<AppDispatch>();
@@ -90,7 +90,7 @@ export const ProfileScreen = ({ navigation }: any) => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: Colors.bgMain,
   },
   scroll: {
     padding: Spacing.lg,
@@ -99,12 +99,12 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
   },
   headerTitle: {
-    fontSize: 24,
-    fontWeight: '800',
+    fontSize: 26,
+    fontFamily: Typography.fontFamily.heading,
     color: Colors.text,
   },
   card: {
-    backgroundColor: Colors.white,
+    backgroundColor: Colors.bgCard,
     borderRadius: Radius.lg,
     padding: Spacing.xl,
     alignItems: 'center',
@@ -116,19 +116,21 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: Colors.primaryLight,
+    backgroundColor: 'rgba(99, 102, 241, 0.2)',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: Spacing.md,
+    borderWidth: 1,
+    borderColor: Colors.primary,
   },
   avatarText: {
     fontSize: 32,
-    fontWeight: '800',
-    color: Colors.primary,
+    fontFamily: Typography.fontFamily.heading,
+    color: '#A5B4FC',
   },
   name: {
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: 22,
+    fontFamily: Typography.fontFamily.heading,
     color: Colors.text,
     marginBottom: 4,
   },
@@ -149,7 +151,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   section: {
-    backgroundColor: Colors.white,
+    backgroundColor: Colors.bgCard,
     borderRadius: Radius.lg,
     padding: Spacing.lg,
     marginBottom: Spacing.xl,
@@ -157,8 +159,8 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
   },
   sectionTitle: {
-    fontSize: 16,
-    fontWeight: '700',
+    fontSize: 18,
+    fontFamily: Typography.fontFamily.heading,
     color: Colors.text,
     marginBottom: Spacing.md,
   },
