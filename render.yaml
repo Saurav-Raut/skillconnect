@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: skillconnect-backend
+    env: node
+    region: singapore
+    plan: free
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: MONGO_URI
+        value: mongodb+srv://skillConnect:skillConnect@cluster0.ookaxma.mongodb.net/?appName=Cluster0
+      - key: JWT_SECRET
+        value: skillconnect_super_secret_key_123!
+      - key: NODE_ENV
+        value: production
