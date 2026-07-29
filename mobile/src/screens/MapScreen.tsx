@@ -86,8 +86,20 @@ export const MapScreen = ({ navigation }: any) => {
   const [incomingModalVisible, setIncomingModalVisible] = useState(false);
   const [incomingJob, setIncomingJob] = useState<any | null>(null);
 
-  const activeWorkers = (workersList && workersList.length > 0) ? workersList : MOCK_WORKERS;
-  const filteredWorkers = activeWorkers.filter((w: any) => w.skillCategory === selectedSkill);
+  const rawWorkers = (workersList && workersList.length > 0) ? workersList : MOCK_WORKERS;
+  const normalizedWorkers = rawWorkers.map((w: any, idx: number) => ({
+    _id: w._id || `worker_${idx}`,
+    name: w.name || (w.user && w.user.name) || 'Skilled Partner',
+    skillCategory: w.skillCategory || w.skill || 'Electrician',
+    hourlyRate: w.hourlyRate || w.ratePerHour || w.rate || 350,
+    rating: w.rating || w.ratingAvg || 4.8,
+    distanceKm: w.distanceKm || 1.2,
+    coords: w.coords || (w.location && w.location.coordinates) || [72.8805, 19.0805],
+    raw: w
+  }));
+  const filteredWorkers = normalizedWorkers.filter((w: any) =>
+    String(w.skillCategory).toLowerCase() === String(selectedSkill).toLowerCase()
+  );
 
   const handleBookWorker = async (worker: any) => {
     try {
