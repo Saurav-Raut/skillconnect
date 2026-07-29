@@ -66,6 +66,7 @@ exports.register = async (req, res) => {
         role: user.role,
         isVerified: user.isVerified
       }
+    });
   } catch (error) {
     if (error.code === 11000 || (error.message && error.message.includes('11000'))) {
       if (error.message.includes('phone')) {
