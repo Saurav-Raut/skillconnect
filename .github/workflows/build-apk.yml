@@ -1,13 +1,17 @@
 name: Build Android APK
+
 on:
   push:
     branches:
       - main
+      - master
   workflow_dispatch:
 
 jobs:
   build:
+    name: Build APK on Ubuntu Cloud
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout Source Code
         uses: actions/checkout@v4
@@ -17,25 +21,30 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Setup Java
+      - name: Setup Java (JDK 17)
         uses: actions/setup-java@v4
         with:
-          distribution: 'zulu'
+          distribution: 'temurin'
           java-version: '17'
 
-      - name: Install dependencies and build web
+      - name: Install Frontend Dependencies
+        working-directory: ./frontend
+        run: npm install --legacy-peer-deps
+
+      - name: Build Production Web Assets
+        working-directory: ./frontend
+        env:
+          CI: false
+        run: npm run build
+
+      - name: Sync Capacitor Android
         working-directory: ./frontend
         run: |
-          npm install
-          npm run build
+          npm install --legacy-peer-deps @capacitor/core @capacitor/cli @capacitor/android
+          npx cap add android || true
+          npx cap sync android
 
-      - name: Add Capacitor Android platform
-        working-directory: ./frontend
-        run: |
-          npm install @capacitor/android
-          npx cap add android || npx cap sync android
-
-      - name: Build the APK
+      - name: Build Debug APK with Gradle
         working-directory: ./frontend/android
         run: |
           chmod +x gradlew
