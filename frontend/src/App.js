@@ -84,7 +84,10 @@ const App = () => {
     if (token) {
       dispatch(fetchMe());
       
-      const socket = io('http://localhost:5000', {
+      const backendUrl = (typeof process !== 'undefined' && process.env && process.env.REACT_APP_API_URL)
+        ? process.env.REACT_APP_API_URL.replace(/\/api$/, '')
+        : 'http://localhost:5000';
+      const socket = io(backendUrl, {
         reconnection: true,
         reconnectionAttempts: Infinity,
         reconnectionDelay: 1000,

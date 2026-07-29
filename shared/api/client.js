@@ -1,8 +1,18 @@
 import axios from 'axios';
 import { getTokenSync, getToken, removeToken, notifyUnauthorized } from './storage';
 
+const getApiBaseUrl = () => {
+  if (typeof process !== 'undefined' && process.env) {
+    const url = process.env.REACT_APP_API_URL || process.env.EXPO_PUBLIC_API_URL;
+    if (url) {
+      return url.endsWith('/api') ? url : `${url}/api`;
+    }
+  }
+  return 'http://localhost:5000/api';
+};
+
 const API = axios.create({
-  baseURL: 'http://localhost:5000/api',
+  baseURL: getApiBaseUrl(),
   headers: {
     'Content-Type': 'application/json'
   }
