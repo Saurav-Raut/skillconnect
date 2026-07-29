@@ -395,11 +395,57 @@ const AppShell = ({ children }) => {
           color: var(--color-darkest);
         }
         @media (max-width: 900px) {
-          .app { grid-template-columns: 1fr; }
-          .sidebar { position: relative; height: auto; flex-direction: row; overflow-x: auto; padding: 14px 20px; }
-          .sidebar__nav { flex-direction: row; }
+          .app { 
+            grid-template-columns: 1fr; 
+            width: 100%;
+            max-width: 100vw;
+            overflow-x: hidden;
+          }
+          .sidebar { 
+            position: relative; 
+            height: auto; 
+            flex-direction: row; 
+            align-items: center;
+            justify-content: space-between;
+            overflow-x: auto; 
+            padding: 10px 14px; 
+            width: 100%;
+            max-width: 100vw;
+            box-sizing: border-box;
+            gap: 8px;
+          }
+          .sidebar__brand {
+            margin-bottom: 0;
+            font-size: 1.05rem;
+            flex-shrink: 0;
+          }
+          .sidebar__nav { 
+            flex-direction: row; 
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            gap: 4px;
+            flex: 1;
+            justify-content: flex-end;
+          }
+          .sidebar__link {
+            padding: 6px 10px;
+            font-size: 0.76rem;
+            white-space: nowrap;
+            gap: 5px;
+          }
+          .sidebar__icon {
+            font-size: 0.8rem;
+            width: 16px;
+          }
           .sidebar__foot { display: none; }
-          .main { padding: 24px 20px; }
+          .main { 
+            padding: 16px 14px 70px 14px; 
+            width: 100%;
+            max-width: 100vw;
+            overflow-x: hidden;
+            box-sizing: border-box;
+          }
         }
       `}</style>
     </div>

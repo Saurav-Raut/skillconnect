@@ -260,49 +260,51 @@ const SMSAlertModal = ({ onStartRapidoMatch }) => {
         </div>
       )}
 
-      {/* 3. FLOATING DEMO TRIGGER BUTTONS (BOTTOM CENTER PILL BAR - NEVER OVERLAPS HEADER, NAVBAR, OR CORNER BUTTONS) */}
+      {/* 3. FLOATING DEMO TRIGGER BUTTONS (SLEEK & COMPACT FOR BOTH DESKTOP & MOBILE) */}
       <div style={{
         position: 'fixed',
-        bottom: '16px',
+        bottom: '10px',
         left: '50%',
         transform: 'translateX(-50%)',
         zIndex: 8500,
         display: 'flex',
         flexDirection: 'row',
-        flexWrap: 'wrap',
+        flexWrap: 'nowrap',
         justifyContent: 'center',
-        gap: '8px',
+        gap: '6px',
         alignItems: 'center',
-        background: 'rgba(15, 23, 42, 0.85)',
+        background: 'rgba(15, 23, 42, 0.90)',
         backdropFilter: 'blur(12px)',
-        padding: '8px 16px',
+        padding: '6px 10px',
         borderRadius: '999px',
         border: '1px solid rgba(255, 255, 255, 0.15)',
-        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.35)',
-        maxWidth: 'calc(100vw - 32px)'
+        boxShadow: '0 8px 24px rgba(0, 0, 0, 0.35)',
+        maxWidth: 'calc(100vw - 16px)',
+        overflowX: 'auto',
+        WebkitOverflowScrolling: 'touch'
       }}>
         {onStartRapidoMatch && (
           <button
             onClick={onStartRapidoMatch}
             title="Initiate Rapido Live Matching broadcast to nearest 5 workers"
             style={{
-              padding: '8px 14px',
+              padding: '6px 10px',
               borderRadius: '999px',
               background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
               color: '#fff',
               border: '1px solid rgba(255,255,255,0.3)',
               fontWeight: 800,
-              fontSize: '0.75rem',
+              fontSize: '0.72rem',
               cursor: 'pointer',
               boxShadow: '0 4px 12px rgba(245, 158, 11, 0.4)',
               display: 'flex',
               alignItems: 'center',
-              gap: '6px',
+              gap: '4px',
               transition: '0.2s',
               whiteSpace: 'nowrap'
             }}
           >
-            ⚡ Rapido Live Match (Broadcast to 5)
+            ⚡ Rapido Live Match
           </button>
         )}
 
@@ -313,93 +315,95 @@ const SMSAlertModal = ({ onStartRapidoMatch }) => {
               onClick={triggerHouseholdAcceptanceSMS}
               title="Simulate Worker accepting Household job (SMS Alert to Household)"
               style={{
-                padding: '8px 14px',
+                padding: '6px 10px',
                 borderRadius: '999px',
                 background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
                 color: '#fff',
                 border: '1px solid rgba(255,255,255,0.3)',
                 fontWeight: 800,
-                fontSize: '0.75rem',
+                fontSize: '0.72rem',
                 cursor: 'pointer',
                 boxShadow: '0 4px 12px rgba(34, 197, 94, 0.4)',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '6px',
+                gap: '4px',
                 transition: '0.2s',
                 whiteSpace: 'nowrap'
               }}
             >
-              <MessageSquare size={14} /> Simulate Worker Acceptance SMS
+              💬 Accept SMS
             </button>
 
-            {/* SMALL TOGGLE TO TEST WORKER SIDE */}
+            {/* SECONDARY FOR HOUSEHOLD */}
             <button
               onClick={triggerDemoJobAlert}
-              title="Simulate incoming Job SMS Alert (For Worker account)"
+              title="Simulate Incoming Job SMS"
               style={{
-                padding: '6px 12px',
+                padding: '6px 10px',
                 borderRadius: '999px',
-                background: 'rgba(99, 102, 241, 0.2)',
-                color: 'var(--primary)',
-                border: '1px solid var(--primary)',
+                background: 'rgba(99, 102, 241, 0.25)',
+                color: '#e0e7ff',
+                border: '1px solid rgba(99, 102, 241, 0.4)',
                 fontWeight: 700,
                 fontSize: '0.72rem',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '6px',
+                gap: '4px',
+                transition: '0.2s',
                 whiteSpace: 'nowrap'
               }}
             >
-              <Bell size={12} /> Test Worker Job SMS
+              🔔 Incoming Job
             </button>
           </>
         ) : (
           <>
-            {/* PRIMARY FOR WORKER: Incoming Job SMS popup */}
+            {/* PRIMARY FOR WORKER: Incoming Job SMS */}
             <button
               onClick={triggerDemoJobAlert}
-              title="Simulate incoming SMS Job Alert for Worker"
+              title="Simulate Incoming Job SMS (Broadcast Alert)"
               style={{
-                padding: '8px 14px',
+                padding: '6px 10px',
                 borderRadius: '999px',
                 background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
                 color: '#fff',
                 border: '1px solid rgba(255,255,255,0.3)',
                 fontWeight: 800,
-                fontSize: '0.75rem',
+                fontSize: '0.72rem',
                 cursor: 'pointer',
                 boxShadow: '0 4px 12px rgba(99, 102, 241, 0.4)',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '6px',
+                gap: '4px',
                 transition: '0.2s',
                 whiteSpace: 'nowrap'
               }}
             >
-              <Bell size={14} /> Simulate Incoming Job SMS
+              🔔 Incoming Job SMS
             </button>
 
-            {/* SMALL TOGGLE TO TEST HOUSEHOLD SIDE */}
+            {/* SECONDARY FOR WORKER */}
             <button
               onClick={triggerHouseholdAcceptanceSMS}
-              title="Simulate Household SMS Alert"
+              title="Simulate Household Acceptance SMS"
               style={{
-                padding: '6px 12px',
+                padding: '6px 10px',
                 borderRadius: '999px',
-                background: 'rgba(34, 197, 94, 0.2)',
-                color: '#22c55e',
-                border: '1px solid #22c55e',
+                background: 'rgba(34, 197, 94, 0.25)',
+                color: '#dcfce7',
+                border: '1px solid rgba(34, 197, 94, 0.4)',
                 fontWeight: 700,
                 fontSize: '0.72rem',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '6px',
+                gap: '4px',
+                transition: '0.2s',
                 whiteSpace: 'nowrap'
               }}
             >
-              <MessageSquare size={12} /> Test Household Acceptance SMS
+              💬 Accept SMS
             </button>
           </>
         )}
