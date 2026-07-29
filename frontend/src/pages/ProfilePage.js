@@ -162,8 +162,8 @@ const ProfilePage = () => {
 
   // Settings View for own profile
   return (
-    <div className="fade-in" style={{ maxWidth: '800px', margin: '0 auto', padding: '2rem 1rem' }}>
-      <h2 style={{ marginBottom: '2rem' }}>Profile & Identity Settings</h2>
+    <div className="fade-in" style={{ maxWidth: '800px', width: '100%', margin: '0 auto', padding: '1.5rem 0.5rem', boxSizing: 'border-box' }}>
+      <h2 style={{ marginBottom: '1.5rem', fontSize: '1.5rem' }}>Profile & Identity Settings</h2>
       
       {userInfo?.role === 'household' && (
         <HouseholdProfileSettings userInfo={userInfo} />

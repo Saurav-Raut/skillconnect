@@ -145,7 +145,7 @@ const WorkerForm = ({ initialData, onComplete }) => {
         />
       </div>
 
-      {/* SERVICE ADDRESS & LIVE GPS LOCATION (Replaces raw Longitude/Latitude) */}
+      {/* SERVICE ADDRESS & LIVE GPS LOCATION */}
       <div style={{ 
         background: 'rgba(15, 23, 42, 0.45)', 
         border: '1.5px solid var(--line)', 
@@ -153,11 +153,14 @@ const WorkerForm = ({ initialData, onComplete }) => {
         padding: '16px', 
         display: 'flex', 
         flexDirection: 'column', 
-        gap: '14px' 
+        gap: '14px',
+        width: '100%',
+        boxSizing: 'border-box'
       }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700, fontSize: '1rem', color: 'white' }}>
-            <MapPin size={18} color="var(--primary)" /> Service Address & Operating Area
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700, fontSize: '0.95rem', color: 'white' }}>
+            <MapPin size={18} color="var(--primary)" style={{ flexShrink: 0 }} />
+            <span>Service Address & Operating Area</span>
           </div>
           
           <button
@@ -170,10 +173,13 @@ const WorkerForm = ({ initialData, onComplete }) => {
               color: gpsStatus === 'locked' ? '#22c55e' : 'var(--primary)',
               display: 'flex',
               alignItems: 'center',
+              justifyContent: 'center',
               gap: '6px',
               fontWeight: 700,
               cursor: 'pointer',
-              padding: '6px 12px'
+              padding: '8px 14px',
+              borderRadius: '8px',
+              whiteSpace: 'nowrap'
             }}
           >
             <Navigation size={14} />
@@ -181,7 +187,7 @@ const WorkerForm = ({ initialData, onComplete }) => {
           </button>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '12px', width: '100%' }}>
           <div className="field">
             <label>Street Address</label>
             <input
@@ -201,7 +207,7 @@ const WorkerForm = ({ initialData, onComplete }) => {
               setCity(loc.addressText);
               setCoordinates(loc.coordinates);
             }}
-            placeholder="Type 2-3 letters of any Indian city/area (e.g. Thu, Vij, Hyd)..."
+            placeholder="Type city/area name (e.g. Thullur, Vijayawada)..."
             label="City / Operating Area (All-India Autocomplete)"
           />
         </div>
@@ -209,21 +215,25 @@ const WorkerForm = ({ initialData, onComplete }) => {
         {/* Visual telemetry badge showing active geocoded coordinates for distance & live tracking */}
         <div style={{
           display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          background: 'rgba(0, 0, 0, 0.25)',
-          padding: '10px 14px',
+          flexDirection: 'column',
+          gap: '6px',
+          background: 'rgba(0, 0, 0, 0.35)',
+          padding: '12px 14px',
           borderRadius: '10px',
-          fontSize: '0.8rem',
-          color: 'var(--text-muted)'
+          fontSize: '0.82rem',
+          color: 'var(--text-muted)',
+          width: '100%',
+          boxSizing: 'border-box'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <CheckCircle size={15} color="#22c55e" />
-            <span><b>Geo-Distance Ready:</b> Active for nearby filtering & Rapido live tracking</span>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', color: 'var(--text-main)' }}>
+            <CheckCircle size={16} color="#22c55e" style={{ flexShrink: 0, marginTop: '2px' }} />
+            <span style={{ lineHeight: 1.4 }}>
+              <b>Geo-Distance Ready:</b> Active for nearby filtering & Rapido live tracking
+            </span>
           </div>
-          <span className="mono" style={{ color: 'var(--text-light)', fontSize: '0.75rem' }}>
-            ({coordinates[1]}° N, {coordinates[0]}° E)
-          </span>
+          <div className="mono" style={{ color: 'var(--text-light)', fontSize: '0.75rem', paddingLeft: '24px' }}>
+            Coordinates: ({coordinates[1]}° N, {coordinates[0]}° E)
+          </div>
         </div>
       </div>
 
