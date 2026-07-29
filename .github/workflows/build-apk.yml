@@ -24,17 +24,19 @@ jobs:
           java-version: '17'
 
       - name: Install dependencies and build web
+        working-directory: ./frontend
         run: |
           npm install
           npm run build
 
       - name: Add Capacitor Android platform
+        working-directory: ./frontend
         run: |
           npm install @capacitor/android
           npx cap add android || npx cap sync android
 
       - name: Build the APK
-        working-directory: ./android
+        working-directory: ./frontend/android
         run: |
           chmod +x gradlew
           ./gradlew assembleDebug
@@ -43,4 +45,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: app-debug
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          path: frontend/android/app/build/outputs/apk/debug/app-debug.apk
