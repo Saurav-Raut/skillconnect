@@ -66,8 +66,16 @@ exports.register = async (req, res) => {
         role: user.role,
         isVerified: user.isVerified
       }
-    });
   } catch (error) {
+    if (error.code === 11000 || (error.message && error.message.includes('11000'))) {
+      if (error.message.includes('phone')) {
+        return res.status(400).json({ success: false, error: 'This phone number is already registered! Please use a different phone number or log in.' });
+      }
+      if (error.message.includes('email')) {
+        return res.status(400).json({ success: false, error: 'This email address is already registered! Please use a different email or log in.' });
+      }
+      return res.status(400).json({ success: false, error: 'An account with these details already exists. Please log in.' });
+    }
     res.status(500).json({ success: false, error: error.message });
   }
 };
