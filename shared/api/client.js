@@ -8,6 +8,11 @@ const getApiBaseUrl = () => {
       return url.endsWith('/api') ? url : `${url}/api`;
     }
   }
+  if (typeof window !== 'undefined' && window.location && window.location.hostname) {
+    if (window.location.hostname !== 'localhost' && !window.location.hostname.includes('vercel.app')) {
+      return `http://${window.location.hostname}:5000/api`;
+    }
+  }
   return 'http://localhost:5000/api';
 };
 

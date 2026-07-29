@@ -84,9 +84,12 @@ const App = () => {
     if (token) {
       dispatch(fetchMe());
       
-      const backendUrl = (typeof process !== 'undefined' && process.env && process.env.REACT_APP_API_URL)
-        ? process.env.REACT_APP_API_URL.replace(/\/api$/, '')
-        : 'http://localhost:5000';
+      let backendUrl = 'http://localhost:5000';
+      if (typeof process !== 'undefined' && process.env && process.env.REACT_APP_API_URL) {
+        backendUrl = process.env.REACT_APP_API_URL.replace(/\/api$/, '');
+      } else if (typeof window !== 'undefined' && window.location && window.location.hostname && window.location.hostname !== 'localhost' && !window.location.hostname.includes('vercel.app')) {
+        backendUrl = `http://${window.location.hostname}:5000`;
+      }
       const socket = io(backendUrl, {
         reconnection: true,
         reconnectionAttempts: Infinity,
