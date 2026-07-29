@@ -2,11 +2,9 @@ import axios from 'axios';
 import { getTokenSync, getToken, removeToken, notifyUnauthorized } from './storage';
 
 const getApiBaseUrl = () => {
-  if (typeof process !== 'undefined' && process.env) {
-    const url = process.env.REACT_APP_API_URL || process.env.EXPO_PUBLIC_API_URL;
-    if (url) {
-      return url.endsWith('/api') ? url : `${url}/api`;
-    }
+  const envUrl = process.env.REACT_APP_API_URL || process.env.EXPO_PUBLIC_API_URL;
+  if (envUrl) {
+    return envUrl.endsWith('/api') ? envUrl : `${envUrl}/api`;
   }
   if (typeof window !== 'undefined' && window.location && window.location.hostname) {
     if (window.location.hostname !== 'localhost' && !window.location.hostname.includes('vercel.app')) {

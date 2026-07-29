@@ -85,7 +85,7 @@ const App = () => {
       dispatch(fetchMe());
       
       let backendUrl = 'http://localhost:5000';
-      if (typeof process !== 'undefined' && process.env && process.env.REACT_APP_API_URL) {
+      if (process.env.REACT_APP_API_URL) {
         backendUrl = process.env.REACT_APP_API_URL.replace(/\/api$/, '');
       } else if (typeof window !== 'undefined' && window.location && window.location.hostname && window.location.hostname !== 'localhost' && !window.location.hostname.includes('vercel.app')) {
         backendUrl = `http://${window.location.hostname}:5000`;

@@ -1,4 +1,4 @@
-export const API_BASE_URL = (typeof process !== 'undefined' && process.env && (process.env.REACT_APP_API_URL || process.env.EXPO_PUBLIC_API_URL))
+export const API_BASE_URL = (process.env.REACT_APP_API_URL || process.env.EXPO_PUBLIC_API_URL)
   ? ((process.env.REACT_APP_API_URL || process.env.EXPO_PUBLIC_API_URL).endsWith('/api')
     ? (process.env.REACT_APP_API_URL || process.env.EXPO_PUBLIC_API_URL)
     : `${process.env.REACT_APP_API_URL || process.env.EXPO_PUBLIC_API_URL}/api`)
