@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, ActivityIndicator, StyleSheet, StatusBar } from 'react-native';
 import { Provider, useDispatch, useSelector } from 'react-redux';
 import { NavigationContainer } from '@react-navigation/native';
+import { fetchMe } from '@skillconnect/shared';
 import { store, AppDispatch, RootState } from './src/redux/store';
 import { initializeSecureStorage } from './src/api/setupStorage';
 import { AuthStack } from './src/navigation/AuthStack';
@@ -17,7 +18,10 @@ const RootNavigator = () => {
 
   useEffect(() => {
     const setup = async () => {
-      await initializeSecureStorage();
+      const storedToken = await initializeSecureStorage();
+      if (storedToken) {
+        dispatch(fetchMe());
+      }
       await registerForPushNotificationsAsync();
       setInitializing(false);
     };

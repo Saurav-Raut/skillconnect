@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, ScrollView } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
-import { logout } from '@skillconnect/shared';
+import { useFocusEffect } from '@react-navigation/native';
+import { logout, fetchMe } from '@skillconnect/shared';
 import { AppDispatch, RootState } from '../redux/store';
 import { CustomButton } from '../components/CustomButton';
 import { Colors, Spacing, Radius } from '../theme/colors';
@@ -9,6 +10,12 @@ import { Colors, Spacing, Radius } from '../theme/colors';
 export const ProfileScreen = ({ navigation }: any) => {
   const dispatch = useDispatch<AppDispatch>();
   const { userInfo } = useSelector((state: RootState) => state.user);
+
+  useFocusEffect(
+    useCallback(() => {
+      dispatch(fetchMe());
+    }, [dispatch])
+  );
 
   const handleLogout = () => {
     dispatch(logout());

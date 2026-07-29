@@ -1,7 +1,8 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchBookings } from '@skillconnect/shared';
+import { useFocusEffect } from '@react-navigation/native';
+import { fetchBookings, fetchMe } from '@skillconnect/shared';
 import { AppDispatch, RootState } from '../redux/store';
 import { Colors, Spacing, Radius } from '../theme/colors';
 
@@ -10,9 +11,12 @@ export const HomeScreen = ({ navigation }: any) => {
   const { userInfo } = useSelector((state: RootState) => state.user);
   const { bookings } = useSelector((state: RootState) => state.booking);
 
-  useEffect(() => {
-    dispatch(fetchBookings());
-  }, [dispatch]);
+  useFocusEffect(
+    useCallback(() => {
+      dispatch(fetchMe());
+      dispatch(fetchBookings());
+    }, [dispatch])
+  );
 
   const isWorker = userInfo?.role === 'worker';
 

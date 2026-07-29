@@ -1,6 +1,7 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
+import { useFocusEffect } from '@react-navigation/native';
 import { fetchBookings, fundEscrow } from '@skillconnect/shared';
 import { AppDispatch, RootState } from '../redux/store';
 import { CustomButton } from '../components/CustomButton';
@@ -11,9 +12,11 @@ export const BookingsScreen = ({ navigation }: any) => {
   const { bookings, loading } = useSelector((state: RootState) => state.booking);
   const { userInfo } = useSelector((state: RootState) => state.user);
 
-  useEffect(() => {
-    dispatch(fetchBookings());
-  }, [dispatch]);
+  useFocusEffect(
+    useCallback(() => {
+      dispatch(fetchBookings());
+    }, [dispatch])
+  );
 
   const onRefresh = () => {
     dispatch(fetchBookings());

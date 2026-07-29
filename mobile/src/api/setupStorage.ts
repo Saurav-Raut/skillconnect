@@ -4,7 +4,7 @@ import { setStorageAdapter, setUnauthorizedCallback } from '@skillconnect/shared
 // In-memory token cache for instant synchronous access
 let cachedToken: string | null = null;
 
-export const initializeSecureStorage = async (onUnauthorized?: () => void) => {
+export const initializeSecureStorage = async (onUnauthorized?: () => void): Promise<string | null> => {
   try {
     cachedToken = await SecureStore.getItemAsync('jwt_token');
   } catch (err) {
@@ -49,4 +49,6 @@ export const initializeSecureStorage = async (onUnauthorized?: () => void) => {
   if (onUnauthorized) {
     setUnauthorizedCallback(onUnauthorized);
   }
+
+  return cachedToken;
 };

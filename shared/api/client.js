@@ -6,16 +6,17 @@ const getApiBaseUrl = () => {
   if (envUrl) {
     return envUrl.endsWith('/api') ? envUrl : `${envUrl}/api`;
   }
-  if (typeof window !== 'undefined' && window.location && window.location.hostname) {
-    if (window.location.hostname !== 'localhost' && !window.location.hostname.includes('vercel.app')) {
-      return `http://${window.location.hostname}:5000/api`;
-    }
+  if (typeof window !== 'undefined' && window.location && window.location.hostname === 'localhost') {
+    return 'http://localhost:5000/api';
   }
   return 'https://skillconnect-backend-97u2.onrender.com/api';
 };
 
+const baseURL = getApiBaseUrl();
+console.log('[API Client] Base URL:', baseURL);
+
 const API = axios.create({
-  baseURL: getApiBaseUrl(),
+  baseURL,
   headers: {
     'Content-Type': 'application/json'
   }

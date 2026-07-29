@@ -10,13 +10,15 @@ import {
   Alert
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
+import { useFocusEffect } from '@react-navigation/native';
 import {
   SKILL_CATEGORIES,
   calculateDistanceKm,
   formatDistanceDisplay,
   calculateEtaMinutes,
   createBooking,
-  acceptBooking
+  acceptBooking,
+  fetchWorkers
 } from '@skillconnect/shared';
 import { AppDispatch, RootState } from '../redux/store';
 import { CustomButton } from '../components/CustomButton';
@@ -67,7 +69,14 @@ const MOCK_WORKERS = [
 export const MapScreen = ({ navigation }: any) => {
   const dispatch = useDispatch<AppDispatch>();
   const { userInfo } = useSelector((state: RootState) => state.user);
+  const { workersList } = useSelector((state: RootState) => state.worker);
   const isWorker = userInfo?.role === 'worker';
+
+  useFocusEffect(
+    React.useCallback(() => {
+      dispatch(fetchWorkers({}));
+    }, [dispatch])
+  );
 
   const [selectedSkill, setSelectedSkill] = useState<string>('Electrician');
   const [selectedWorker, setSelectedWorker] = useState<any | null>(null);
@@ -77,7 +86,8 @@ export const MapScreen = ({ navigation }: any) => {
   const [incomingModalVisible, setIncomingModalVisible] = useState(false);
   const [incomingJob, setIncomingJob] = useState<any | null>(null);
 
-  const filteredWorkers = MOCK_WORKERS.filter((w) => w.skillCategory === selectedSkill);
+  const activeWorkers = (workersList && workersList.length > 0) ? workersList : MOCK_WORKERS;
+  const filteredWorkers = activeWorkers.filter((w: any) => w.skillCategory === selectedSkill);
 
   const handleBookWorker = async (worker: any) => {
     try {
