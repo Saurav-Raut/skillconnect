@@ -40,7 +40,7 @@ jobs:
       - name: Sync Capacitor Android
         working-directory: ./frontend
         run: |
-          npm install --legacy-peer-deps @capacitor/core @capacitor/cli @capacitor/android
+          npm install --legacy-peer-deps typescript @capacitor/core @capacitor/cli @capacitor/android
           npx cap add android || true
           npx cap sync android
 

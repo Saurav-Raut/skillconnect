@@ -1,0 +1,9 @@
+{
+  "appId": "com.skillconnect.app",
+  "appName": "SkillConnect",
+  "webDir": "build",
+  "server": {
+    "url": "https://skillconnect-chi.vercel.app/",
+    "cleartext": true
+  }
+}
