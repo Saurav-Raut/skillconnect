@@ -35,6 +35,44 @@ const TrackingPage = () => {
 
   const status = demoStatus || booking?.status || 'pending';
 
+  // Simulated Location Tracking for Workers
+  useEffect(() => {
+    if (userInfo?.role === 'worker' && status === 'accepted') {
+      if (!window.socket) return;
+      
+      let lat = 16.5110;
+      let lng = 80.5090;
+      const targetLat = 16.5190;
+      const targetLng = 80.5180;
+      
+      const steps = 60; // take 60 updates to reach destination (approx 3 minutes at 3s per update)
+      const latStep = (targetLat - lat) / steps;
+      const lngStep = (targetLng - lng) / steps;
+      
+      const interval = setInterval(() => {
+        lat += latStep;
+        lng += lngStep;
+        
+        // Don't overshoot
+        if ((latStep > 0 && lat > targetLat) || (latStep < 0 && lat < targetLat)) lat = targetLat;
+        if ((lngStep > 0 && lng > targetLng) || (lngStep < 0 && lng < targetLng)) lng = targetLng;
+        
+        window.socket.emit('updateLocation', {
+          workerId: userInfo._id,
+          bookingId,
+          coordinates: [lng, lat], // socket expects [lng, lat]
+          role: 'worker'
+        });
+        
+        if (lat === targetLat && lng === targetLng) {
+          clearInterval(interval);
+        }
+      }, 3000);
+      
+      return () => clearInterval(interval);
+    }
+  }, [userInfo, status, bookingId]);
+
   const handleFaceScan = (faceData) => {
     if (scanType === 'checkin') {
       dispatch(verifyCheckIn({ bookingId, faceData })).then((action) => {
