@@ -17,7 +17,13 @@ const TrackingPage = () => {
   const { userInfo } = useSelector((state) => state.user);
   const { bookingsList, loading } = useSelector((state) => state.booking);
   
-  const booking = bookingsList.find(b => b._id === bookingId);
+  // Find the specific booking, or fallback to the most recent one if no valid ID provided
+  let booking = bookingsList.find(b => b._id === bookingId);
+  if (!booking && bookingsList.length > 0) {
+    booking = bookingsList[0];
+  }
+
+  const activeBookingId = booking?._id || bookingId;
   const workerUser = booking?.worker?.user;
   const workerName = workerUser?.name || searchParams.get('workerName') || 'Worker';
   const workerSkill = booking?.worker?.skill || 'Professional';
@@ -155,7 +161,7 @@ const TrackingPage = () => {
     }
   };
 
-  if (!booking) {
+  if (loading && !booking) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
         <div className="badge" style={{ padding: '12px 24px', fontSize: '1rem' }}>
@@ -163,6 +169,16 @@ const TrackingPage = () => {
           <style>{`@keyframes spin { 100% { transform: rotate(360deg); } }`}</style>
           Loading live tracking details...
         </div>
+      </div>
+    );
+  }
+
+  if (!loading && !booking) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh', flexDirection: 'column', gap: '16px' }}>
+        <div style={{ fontSize: '3rem' }}>📭</div>
+        <div style={{ fontSize: '1.2rem', fontWeight: 600 }}>No active tracking found</div>
+        <div style={{ color: 'var(--text-muted)' }}>You don't have any active bookings to track right now.</div>
       </div>
     );
   }
@@ -318,7 +334,7 @@ const TrackingPage = () => {
           <LiveMap 
             workerName={workerName} 
             workerSkill={workerSkill}
-            bookingId={bookingId} 
+            bookingId={activeBookingId} 
             workerId={workerUser?._id || workerId}
             workerInitialCoords={workerCoords}
             householdCoords={householdCoords}
@@ -326,7 +342,7 @@ const TrackingPage = () => {
         )}
       </div>
 
-      <SOSButton bookingId={bookingId} userId={userInfo?._id} role={userInfo?.role} />
+      <SOSButton bookingId={activeBookingId} userId={userInfo?._id} role={userInfo?.role} />
 
       <style>{`
         .tracking-layout {
