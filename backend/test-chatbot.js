@@ -8,27 +8,29 @@ const dotenv = require('dotenv');
 const assert = require('assert');
 
 dotenv.config();
+process.env.NODE_ENV = 'test';
 
 const KBChunk = require('./models/KBChunk');
 const IntentRoute = require('./models/IntentRoute');
 const ChatLog = require('./models/ChatLog');
 const SupportTicket = require('./models/SupportTicket');
-const { processChatbotMessage, seedDefaultDataIfEmpty } = require('./utils/chatbotEngine');
+
 
 console.log('🏁 Starting SkillConnect Chatbot Integration Tests...');
 
 async function runTests() {
   try {
-    // Connect to MongoDB
-    await mongoose.connect(process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/skillconnect');
-    console.log('✅ MongoDB Connected.');
+    // Connect to separate test database to avoid clearing live FAQs
+    await mongoose.connect(process.env.MONGO_URI_TEST || 'mongodb://127.0.0.1:27017/skillconnect_test');
+    console.log('✅ MongoDB Connected to Test Database.');
 
     // Clear collections to force re-seeding of new intents and FAQs
     await KBChunk.deleteMany({});
     await IntentRoute.deleteMany({});
     console.log('✅ Temporary Collections Cleared.');
 
-    // Trigger seeding explicitly
+    // Import chatbotEngine after connection and await seeding explicitly
+    const { processChatbotMessage, seedDefaultDataIfEmpty } = require('./utils/chatbotEngine');
     await seedDefaultDataIfEmpty();
 
     const mockSessionId = 'test_sess_' + Math.random().toString(36).substring(2, 10);

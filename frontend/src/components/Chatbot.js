@@ -274,7 +274,7 @@ const Chatbot = () => {
                 }}
               >
                 <div>
-                  {m.text || m.original}
+                  {renderMessageText(m.text || m.original)}
                   {m.routeButton && (
                     <div style={{ marginTop: '12px' }}>
                       <Link 
@@ -355,6 +355,61 @@ const Chatbot = () => {
       )}
     </>
   );
+};
+
+const renderMessageText = (text) => {
+  if (!text) return null;
+  
+  const emailRegex = /([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/i;
+  const phoneRegex = /(\+?\d{1,3}[-.\s]?\d{3,4}[-.\s]?\d{3,4}[-.\s]?\d{4})/;
+
+  // Split text by spaces and preserve whitespace tokens
+  const parts = text.split(/(\s+)/);
+  return parts.map((part, idx) => {
+    // Check for email match
+    const emailMatch = part.match(emailRegex);
+    if (emailMatch) {
+      const email = emailMatch[1];
+      const before = part.split(email)[0];
+      const after = part.split(email)[1];
+      return (
+        <span key={idx}>
+          {before}
+          <a 
+            href={`mailto:${email}`} 
+            style={{ color: '#2563eb', textDecoration: 'underline', fontWeight: 'bold' }}
+            target="_blank" 
+            rel="noopener noreferrer"
+          >
+            {email}
+          </a>
+          {after}
+        </span>
+      );
+    }
+
+    // Check for phone match
+    const phoneMatch = part.match(phoneRegex);
+    if (phoneMatch) {
+      const phone = phoneMatch[1];
+      const before = part.split(phone)[0];
+      const after = part.split(phone)[1];
+      return (
+        <span key={idx}>
+          {before}
+          <a 
+            href={`tel:${phone.replace(/[-.\s]/g, '')}`} 
+            style={{ color: '#2563eb', textDecoration: 'underline', fontWeight: 'bold' }}
+          >
+            {phone}
+          </a>
+          {after}
+        </span>
+      );
+    }
+
+    return part;
+  });
 };
 
 export default Chatbot;

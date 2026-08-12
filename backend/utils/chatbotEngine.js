@@ -122,7 +122,9 @@ const seedDefaultDataIfEmpty = async () => {
 };
 
 // Execute seeding check on load
-seedDefaultDataIfEmpty();
+if (process.env.NODE_ENV !== 'test') {
+  seedDefaultDataIfEmpty();
+}
 
 /**
  * Clean & normalize text for simple language analysis
@@ -173,8 +175,9 @@ const classifyIntentLocal = (text) => {
 const getRAGContext = async (queryText, userRole) => {
   const lowercase = queryText.toLowerCase();
   const searchRoles = [userRole, 'general'];
+  const allRoles = ['household', 'worker', 'general', 'admin'];
 
-  // Try text index search first
+  // 1. Try role-specific text index search
   try {
     let chunks = await KBChunk.find(
       { role: { $in: searchRoles }, $text: { $search: queryText } },
@@ -190,10 +193,36 @@ const getRAGContext = async (queryText, userRole) => {
     // Ignore text search errors if index is building
   }
 
-  // Fallback: search by keywords field
+  // 2. Try global text index search (cross-role fallback)
+  try {
+    let chunks = await KBChunk.find(
+      { role: { $in: allRoles }, $text: { $search: queryText } },
+      { score: { $meta: 'textScore' } }
+    )
+      .sort({ score: { $meta: 'textScore' } })
+      .limit(2);
+
+    if (chunks && chunks.length > 0) {
+      return chunks;
+    }
+  } catch (err) {
+    // Ignore
+  }
+
+  // 3. Fallback: role-specific keyword match
   const tokens = lowercase.split(/\s+/).filter(t => t.length > 2);
-  const chunks = await KBChunk.find({
+  let chunks = await KBChunk.find({
     role: { $in: searchRoles },
+    keywords: { $in: tokens }
+  }).limit(2);
+
+  if (chunks && chunks.length > 0) {
+    return chunks;
+  }
+
+  // 4. Fallback: global keyword match (cross-role fallback)
+  chunks = await KBChunk.find({
+    role: { $in: allRoles },
     keywords: { $in: tokens }
   }).limit(2);
 
@@ -401,11 +430,11 @@ User Query: "${text}"`;
       } else if (detectedIntent === 'raise_complaint') {
         replyText = `यदि आपको काम, भुगतान या सुरक्षा से संबंधित कोई समस्या है, तो आप शिकायत दर्ज कर सकते हैं। कृपया हमारी सुरक्षा टीम को रिपोर्ट भेजने के लिए नीचे दिए गए बटन का उपयोग करें।`;
       } else if (detectedIntent === 'escalation_request' || shouldEscalate) {
-        replyText = `हम आपको एक मानव सहायता एजेंट से जोड़ रहे हैं। एक सपोर्ट टिकट (ID: ${sessionId.slice(0, 8)}) खोल दिया गया है। कृपया कुछ क्षण प्रतीक्षा करें।`;
+        replyText = `हम आपको एक मानव सहायता एजेंट से जोड़ रहे हैं। एक सपोर्ट टिकट (ID: ${sessionId.slice(0, 8)}) खोल दिया गया है। तुरंत सहायता के लिए, कृपया कस्टमर केयर को +1-800-555-0199 पर कॉल करें या customercare@skillconnect.com पर ईमेल करें। एक प्रतिनिधि 5 मिनट के भीतर आपसे संपर्क करेगा। असुविधा के लिए खेद है!`;
       } else if (matchedChunkText) {
         replyText = matchedChunkText;
       } else {
-        replyText = `नमस्ते! मैं स्किलकनेक्ट का एआई सहायक हूँ। मैं सुरक्षा नीतियों, भुगतान और बुकिंग में आपकी सहायता कर सकता हूँ। क्या आप मुझे बता सकते हैं कि आपको किस प्रकार की सहायता चाहिए?`;
+        replyText = `नमस्ते! मैं स्किलकनेक्ट का एआई सहायक हूँ। मैं सुरक्षा नीतियों, भुगतान और बुकिंग में आपकी सहायता कर सकता हूँ। क्या आप मुझे बता सकते हैं कि आपको किस प्रकार की सहायता चाहिए?\n\nतुरंत सहायता के लिए, कृपया कस्टमर केयर को +1-800-555-0199 पर कॉल करें या customercare@skillconnect.com पर ईमेल करें। एक प्रतिनिधि 5 मिनट के भीतर आपसे संपर्क करेगा। असुविधा के लिए खेद है!`;
       }
     } else {
       // English Responses
@@ -430,11 +459,11 @@ User Query: "${text}"`;
       } else if (detectedIntent === 'raise_complaint') {
         replyText = `If you have experienced an issue with service safety, workers, or customer interactions, you can file a complaint. Click the button below to reach the support team.`;
       } else if (detectedIntent === 'escalation_request' || shouldEscalate) {
-        replyText = `Connecting you to a human agent... A support ticket (Session ID: ${sessionId.slice(0, 8)}) has been created in our escalation queue. An administrator will reply shortly.`;
+        replyText = `Connecting you to a human agent... A support ticket (Session ID: ${sessionId.slice(0, 8)}) has been created in our escalation queue. An administrator will reply shortly. For urgent support, call Customer Care at +1-800-555-0199 or email customercare@skillconnect.com and an agent will reach you within 5 minutes. Sorry for the inconvenience!`;
       } else if (matchedChunkText) {
         replyText = matchedChunkText;
       } else {
-        replyText = `Hello! I am your SkillConnect support assistant. I can help with safety rules, payments, earnings, or booking tracking. What can I do for you today?`;
+        replyText = `Hello! I am your SkillConnect support assistant. I can help with safety rules, payments, earnings, or booking tracking. What can I do for you today?\n\nIf you need urgent assistance, please call Customer Care at +1-800-555-0199 or email customercare@skillconnect.com and a support representative will reach you within 5 minutes. Sorry for the inconvenience!`;
       }
     }
   }
