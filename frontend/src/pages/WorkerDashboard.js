@@ -29,6 +29,17 @@ const WorkerDashboard = () => {
   
   const rating = userInfo?.workerProfile?.ratingAvg || 5.0;
 
+  // Toggle online status when viewing dashboard
+  useEffect(() => {
+    if (userInfo?._id && window.socket) {
+      window.socket.emit('workerOnlineToggle', { workerId: userInfo._id, isOnline: true });
+      
+      return () => {
+        window.socket.emit('workerOnlineToggle', { workerId: userInfo._id, isOnline: false });
+      };
+    }
+  }, [userInfo]);
+
   return (
     <div className="fade-in">
       
@@ -71,11 +82,11 @@ const WorkerDashboard = () => {
           pendingRequests.map(req => (
             <div className="card" key={req._id}>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <div style={{ fontWeight: 700 }}>Wiring repair</div>
+                <div style={{ fontWeight: 700 }}>{req.skill || req.skillRequested || 'New Job Request'}</div>
                 <span className="mono" style={{ color: 'var(--text-light)', fontSize: '0.76rem' }}>Today, 4:30 PM</span>
               </div>
               <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem', margin: '8px 0 16px' }}>
-                {req.household?.user?.name || 'Priya Reddy'} · Vijayawada, 2.1 km away
+                {req.household?.user?.name || 'Household Customer'} · {(req.distanceKm || 2.1).toFixed(1)} km away
               </div>
               <div style={{ display: 'flex', gap: '10px' }}>
                 <button onClick={() => handleAccept(req._id)} className="btn btn-primary btn-sm" style={{ flex: 1 }}>Accept</button>
@@ -83,23 +94,6 @@ const WorkerDashboard = () => {
               </div>
             </div>
           ))
-        )}
-
-        {/* Demo Card to match PDF perfectly */}
-        {pendingRequests.length === 0 && (
-          <div className="card">
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <div style={{ fontWeight: 700 }}>Fan installation</div>
-              <span className="mono" style={{ color: 'var(--text-light)', fontSize: '0.76rem' }}>Tomorrow, 11:00 AM</span>
-            </div>
-            <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem', margin: '8px 0 16px' }}>
-              Mohan Rao · Thullur, 0.8 km away
-            </div>
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <button className="btn btn-primary btn-sm" style={{ flex: 1 }}>Accept</button>
-              <button className="btn btn-ghost btn-sm" style={{ flex: 1 }}>Decline</button>
-            </div>
-          </div>
         )}
       </div>
 
@@ -116,15 +110,13 @@ const WorkerDashboard = () => {
             </tr>
           </thead>
           <tbody>
-            <tr>
-              <td style={{ padding: '14px', fontSize: '0.86rem', borderBottom: '1px solid var(--line)' }}>12:40 PM</td>
-              <td style={{ padding: '14px', fontSize: '0.86rem', borderBottom: '1px solid var(--line)' }}>Priya Reddy</td>
-              <td style={{ padding: '14px', fontSize: '0.86rem', borderBottom: '1px solid var(--line)' }}>Wiring repair</td>
-              <td style={{ padding: '14px', fontSize: '0.86rem', borderBottom: '1px solid var(--line)' }}><span className="badge badge-verified">In progress</span></td>
-              <td style={{ padding: '14px', fontSize: '0.86rem', borderBottom: '1px solid var(--line)' }}>
-                <Link to="/track-booking" className="btn btn-primary btn-sm">Track live →</Link>
-              </td>
-            </tr>
+            {scheduledJobs.length === 0 && (
+              <tr>
+                <td colSpan="5" style={{ padding: '24px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                  No scheduled jobs for today.
+                </td>
+              </tr>
+            )}
             {scheduledJobs.map(job => (
                <tr key={job._id}>
                 <td style={{ padding: '14px', fontSize: '0.86rem', borderBottom: '1px solid var(--line)' }}>{job.startTime || '4:30 PM'}</td>
