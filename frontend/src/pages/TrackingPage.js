@@ -155,6 +155,18 @@ const TrackingPage = () => {
     }
   };
 
+  if (!booking) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
+        <div className="badge" style={{ padding: '12px 24px', fontSize: '1rem' }}>
+          <div className="spinner" style={{ width: '20px', height: '20px', border: '3px solid var(--primary)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite', display: 'inline-block', marginRight: '10px', verticalAlign: 'middle' }}></div>
+          <style>{`@keyframes spin { 100% { transform: rotate(360deg); } }`}</style>
+          Loading live tracking details...
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="tracking-layout fade-in">
       
