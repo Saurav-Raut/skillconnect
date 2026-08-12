@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { registerUser, verifyOTPCode, clearError } from '../redux/userSlice';
 import { SKILL_CATEGORIES } from '../utils/constants';
+import IndiaLocationAutocomplete from '../components/IndiaLocationAutocomplete';
 
 const Register = () => {
   const navigate = useNavigate();
@@ -27,6 +28,7 @@ const Register = () => {
   const [skill, setSkill] = useState(SKILL_CATEGORIES[0] || 'Electrician');
   const [pricePerDay, setPricePerDay] = useState('');
   const [serviceArea, setServiceArea] = useState('');
+  const [coordinates, setCoordinates] = useState(null);
 
   // OTP Verification state
   const [showOtpScreen, setShowOtpScreen] = useState(false);
@@ -53,7 +55,7 @@ const Register = () => {
     e.preventDefault();
     const payload = {
       name,
-      email: role === 'household' ? (email || `${phone}@temp.com`) : `${phone}@temp.com`,
+      email: email || `${phone}@temp.com`, // dummy email if optional is left blank
       phone,
       password: password || 'defaultPass123', // if password isn't in UI, give default
       role
@@ -62,11 +64,13 @@ const Register = () => {
     if (role === 'household') {
       payload.address = address;
       payload.city = locality;
+      if (coordinates) payload.coordinates = coordinates;
     } else {
       payload.skill = skill;
       payload.experience = 1; // default since PDF doesn't have it
       payload.ratePerHour = parseInt(pricePerDay) / 8 || 100;
       payload.bio = '';
+      if (coordinates) payload.coordinates = coordinates;
     }
 
     dispatch(registerUser(payload));
@@ -193,6 +197,11 @@ const Register = () => {
               </div>
               
               <div className="field">
+                <label>Email <span style={{ color: 'var(--text-light)', fontWeight: 400 }}>(optional)</span></label>
+                <input className="input" type="email" placeholder="you@example.com" value={email} onChange={(e)=>setEmail(e.target.value)} />
+              </div>
+              
+              <div className="field">
                 <label>Set Password</label>
                 <input className="input" type="password" placeholder="••••••••" value={password} onChange={(e)=>setPassword(e.target.value)} required />
               </div>
@@ -221,8 +230,16 @@ const Register = () => {
 
               <div className="input-row" style={{ marginTop: '24px' }}>
                 <div className="field">
-                  <label>Service area / locality</label>
-                  <input className="input" placeholder="e.g. Thullur, Guntur Dt." value={serviceArea} onChange={(e)=>setServiceArea(e.target.value)} required />
+                  <IndiaLocationAutocomplete
+                    value={serviceArea}
+                    onChange={(text) => setServiceArea(text)}
+                    onSelectLocation={(loc) => { 
+                      setServiceArea(loc.city);
+                      if (loc.coordinates) setCoordinates(loc.coordinates);
+                    }}
+                    placeholder="e.g. Thullur, Guntur"
+                    label="Service area / locality"
+                  />
                 </div>
                 <div className="field">
                   <label>Price per day (₹)</label>

@@ -9,7 +9,7 @@ const sendOTP = require('../utils/sendOTP');
 // @access  Public
 exports.register = async (req, res) => {
   try {
-    const { name, email, password, phone, role, address, city, skill, experience, ratePerHour, bio } = req.body;
+    const { name, email, password, phone, role, address, city, skill, experience, ratePerHour, bio, coordinates } = req.body;
 
     // Check if user already exists
     let userExists = await User.findOne({ $or: [{ email }, { phone }] });
@@ -35,14 +35,14 @@ exports.register = async (req, res) => {
         experience: experience || 1,
         ratePerHour: ratePerHour || 100,
         bio: bio || '',
-        location: { type: 'Point', coordinates: [72.8777, 19.0760] } // Default coordinates (Mumbai)
+        location: { type: 'Point', coordinates: (coordinates && coordinates.length === 2) ? coordinates : [72.8777, 19.0760] }
       });
     } else if (user.role === 'household') {
       await Household.create({
         user: user._id,
         address: address || 'Not specified',
         city: city || 'Not specified',
-        location: { type: 'Point', coordinates: [72.8777, 19.0760] }
+        location: { type: 'Point', coordinates: (coordinates && coordinates.length === 2) ? coordinates : [72.8777, 19.0760] }
       });
     }
 
