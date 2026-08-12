@@ -12,11 +12,13 @@ const TrackingPage = () => {
   const { bookingId: paramBookingId } = useParams();
   const bookingId = paramBookingId || searchParams.get('bookingId') || 'SK8291';
   const workerId = searchParams.get('workerId');
-  const workerName = searchParams.get('workerName') || 'Karthik Reddy';
   
   const dispatch = useDispatch();
   const { userInfo } = useSelector((state) => state.user);
   const { bookingsList, loading } = useSelector((state) => state.booking);
+  
+  const booking = bookingsList.find(b => b._id === bookingId);
+  const workerName = booking?.worker?.user?.name || searchParams.get('workerName') || 'Karthik Reddy';
   
   const [showFaceScanner, setShowFaceScanner] = useState(false);
   const [scanType, setScanType] = useState(''); // 'checkin' or 'checkout'
@@ -31,7 +33,6 @@ const TrackingPage = () => {
     dispatch(fetchBookings());
   }, [dispatch]);
 
-  const booking = bookingsList.find(b => b._id === bookingId);
   const status = demoStatus || booking?.status || 'accepted';
 
   const handleFaceScan = (faceData) => {

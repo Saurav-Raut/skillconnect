@@ -37,9 +37,17 @@ const BookingPage = () => {
       hours: days * 8,
       facilityAccessAgreed: true
     })).then((action) => {
+      if (action.error) {
+        alert('Failed to create booking: ' + (action.payload || 'Unknown error'));
+        return;
+      }
       const wName = currentWorker?.user?.name || 'Karthik Reddy';
       const wSkill = currentWorker?.skill || 'Electrician';
-      const bId = action?.payload?._id || 'SK' + Math.floor(1000 + Math.random() * 9000);
+      const bId = action.payload?.data?._id || action.payload?._id;
+      if (!bId) {
+        alert('Failed to create booking: Invalid response from server');
+        return;
+      }
       navigate(`/payment/${bId}?amount=${total}&worker=${encodeURIComponent(wName)}&skill=${encodeURIComponent(wSkill)}`);
     });
   };

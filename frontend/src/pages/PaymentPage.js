@@ -43,7 +43,7 @@ const PaymentPage = () => {
 
       // Redirect to Tracking page after 3 seconds
       setTimeout(() => {
-        navigate(`/tracking/${bookingId}`);
+        navigate(`/tracking/${bookingId}?workerName=${encodeURIComponent(workerName)}`);
       }, 3200);
     }, 1800);
   };
