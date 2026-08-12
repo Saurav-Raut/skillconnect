@@ -40,6 +40,30 @@ const LiveMap = ({ workerName = 'Worker', workerSkill = 'Professional', bookingI
     requestAnimationFrame(animate);
   };
 
+  const drawRoute = async (start, end) => {
+    try {
+      const response = await fetch(`https://router.project-osrm.org/route/v1/driving/${start[1]},${start[0]};${end[1]},${end[0]}?overview=full&geometries=geojson`);
+      const data = await response.json();
+      if (data.routes && data.routes[0]) {
+        const coords = data.routes[0].geometry.coordinates.map(c => [c[1], c[0]]);
+        if (polylineRef.current && mapRef.current) {
+          mapRef.current.removeLayer(polylineRef.current);
+        }
+        if (mapRef.current) {
+          polylineRef.current = L.polyline(coords, { 
+            color: '#6366f1', 
+            weight: 4, 
+            opacity: 0.8, 
+            dashArray: '1, 8',
+            lineCap: 'round'
+          }).addTo(mapRef.current);
+        }
+      }
+    } catch (err) {
+      console.error("Routing error:", err);
+    }
+  };
+
   const getWorkerIcon = (name, skill, distText) => {
     return L.divIcon({
       className: 'tracking-worker-pin',
@@ -110,6 +134,9 @@ const LiveMap = ({ workerName = 'Worker', workerSkill = 'Professional', bookingI
 
         setDistance(initialDist.toFixed(1));
         setEta(Math.max(1, Math.ceil(initialDist * 2.5)));
+        
+        // Draw real road route
+        drawRoute(workerInitialCoords, homeCoords);
       }
     }
 
@@ -165,6 +192,9 @@ const LiveMap = ({ workerName = 'Worker', workerSkill = 'Professional', bookingI
       // Calculate distance & ETA based on real coords
       setDistance(dist.toFixed(1));
       setEta(Math.max(1, Math.ceil(dist * 2.5))); // Approx ETA
+      
+      // Update real road route dynamically
+      drawRoute(newCoord, homeCoords);
 
       if (lastCoords) {
         // Calculate speed between points
