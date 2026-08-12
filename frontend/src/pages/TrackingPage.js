@@ -20,6 +20,7 @@ const TrackingPage = () => {
   const booking = bookingsList.find(b => b._id === bookingId);
   const workerUser = booking?.worker?.user;
   const workerName = workerUser?.name || searchParams.get('workerName') || 'Worker';
+  const workerSkill = booking?.worker?.skill || 'Professional';
   
   const workerCoords = booking?.worker?.currentLocation?.coordinates?.length === 2 
     ? [booking.worker.currentLocation.coordinates[1], booking.worker.currentLocation.coordinates[0]] // [lat, lng]
@@ -304,6 +305,7 @@ const TrackingPage = () => {
         ) : (
           <LiveMap 
             workerName={workerName} 
+            workerSkill={workerSkill}
             bookingId={bookingId} 
             workerId={workerUser?._id || workerId}
             workerInitialCoords={workerCoords}

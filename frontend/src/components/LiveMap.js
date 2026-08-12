@@ -3,7 +3,7 @@ import { MapPin, Navigation, Info, Phone, ShieldAlert, CheckCircle, Clock } from
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
-const LiveMap = ({ workerName = 'Worker', bookingId, workerId, workerInitialCoords, householdCoords }) => {
+const LiveMap = ({ workerName = 'Worker', workerSkill = 'Professional', bookingId, workerId, workerInitialCoords, householdCoords }) => {
   const mapRef = useRef(null);
   const mapContainerRef = useRef(null);
   const markerRef = useRef(null);
@@ -40,6 +40,24 @@ const LiveMap = ({ workerName = 'Worker', bookingId, workerId, workerInitialCoor
     requestAnimationFrame(animate);
   };
 
+  const getWorkerIcon = (name, skill, distText) => {
+    return L.divIcon({
+      className: 'tracking-worker-pin',
+      html: `<div style="
+        padding: 6px 14px; border-radius: 99px;
+        background: #0f172a; color: white; display: flex;
+        align-items: center; gap: 8px; font-size: 13px; font-weight: 800;
+        box-shadow: 0 8px 24px rgba(15, 23, 42, 0.4); border: 2.5px solid #6366f1;
+        white-space: nowrap;
+      ">
+        <span style="font-size: 18px;">🛵</span>
+        <span>${name} • ${skill} • ${distText}</span>
+      </div>`,
+      iconSize: [220, 36],
+      iconAnchor: [110, 18]
+    });
+  };
+
   useEffect(() => {
     if (!mapContainerRef.current) return;
 
@@ -73,28 +91,23 @@ const LiveMap = ({ workerName = 'Worker', bookingId, workerId, workerInitialCoor
         .addTo(mapRef.current)
         .bindPopup(`<b>Your Address</b><br/>Flat 4B, Amaravati Residency`);
       if (workerInitialCoords) {
-        const workerIcon = L.divIcon({
-          className: 'tracking-worker-pin',
-          html: `<div style="
-            padding: 6px 14px; border-radius: 99px;
-            background: #0f172a; color: white; display: flex;
-            align-items: center; gap: 8px; font-size: 13px; font-weight: 800;
-            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.4); border: 2.5px solid #6366f1;
-            white-space: nowrap;
-          ">
-            <span style="font-size: 18px;">🛵</span>
-            <span>${workerName}</span>
-          </div>`,
-          iconSize: [160, 36],
-          iconAnchor: [80, 18]
-        });
-        markerRef.current = L.marker(workerInitialCoords, { icon: workerIcon }).addTo(mapRef.current);
+        const initialDist = calculateDistanceKm(workerInitialCoords[0], workerInitialCoords[1], homeCoords[0], homeCoords[1]);
+        const distStr = initialDist < 0.1 ? 'Arrived' : initialDist.toFixed(1) + ' km';
+        
+        const workerIcon = getWorkerIcon(workerName, workerSkill, distStr);
+        
+        markerRef.current = L.marker(workerInitialCoords, { icon: workerIcon })
+          .addTo(mapRef.current)
+          .bindTooltip(`
+            <div style="font-weight: bold; font-size: 14px;">${workerName}</div>
+            <div style="color: #64748b; font-size: 12px;">${workerSkill}</div>
+            <div style="color: #16a34a; font-weight: 600; margin-top: 4px;">${distStr} away</div>
+          `, { direction: 'top', offset: [0, -10] });
         
         // Fit bounds to show both markers
         const group = new L.featureGroup([L.marker(homeCoords), markerRef.current]);
         mapRef.current.fitBounds(group.getBounds(), { padding: [50, 50] });
 
-        const initialDist = calculateDistanceKm(workerInitialCoords[0], workerInitialCoords[1], homeCoords[0], homeCoords[1]);
         setDistance(initialDist.toFixed(1));
         setEta(Math.max(1, Math.ceil(initialDist * 2.5)));
       }
@@ -122,26 +135,27 @@ const LiveMap = ({ workerName = 'Worker', bookingId, workerId, workerInitialCoor
       const newLng = data.coordinates[0];
       const newCoord = [newLat, newLng];
 
-      const workerIcon = L.divIcon({
-        className: 'tracking-worker-pin',
-        html: `<div style="
-          padding: 6px 14px; border-radius: 99px;
-          background: #0f172a; color: white; display: flex;
-          align-items: center; gap: 8px; font-size: 13px; font-weight: 800;
-          box-shadow: 0 8px 24px rgba(15, 23, 42, 0.4); border: 2.5px solid #6366f1;
-          white-space: nowrap;
-        ">
-          <span style="font-size: 18px;">🛵</span>
-          <span>${workerName}</span>
-        </div>`,
-        iconSize: [160, 36],
-        iconAnchor: [80, 18]
-      });
+      const dist = calculateDistanceKm(newLat, newLng, homeCoords[0], homeCoords[1]);
+      const distStr = dist < 0.1 ? 'Arrived' : dist.toFixed(1) + ' km';
+      const workerIcon = getWorkerIcon(workerName, workerSkill, distStr);
 
       if (!markerRef.current) {
-        markerRef.current = L.marker(newCoord, { icon: workerIcon }).addTo(mapRef.current);
+        markerRef.current = L.marker(newCoord, { icon: workerIcon })
+          .addTo(mapRef.current)
+          .bindTooltip(`
+            <div style="font-weight: bold; font-size: 14px;">${workerName}</div>
+            <div style="color: #64748b; font-size: 12px;">${workerSkill}</div>
+            <div style="color: #16a34a; font-weight: 600; margin-top: 4px;">${distStr} away</div>
+          `, { direction: 'top', offset: [0, -10] });
+        
         mapRef.current.panTo(newCoord, { animate: true, duration: 1 });
       } else {
+        markerRef.current.setIcon(workerIcon);
+        markerRef.current.setTooltipContent(`
+            <div style="font-weight: bold; font-size: 14px;">${workerName}</div>
+            <div style="color: #64748b; font-size: 12px;">${workerSkill}</div>
+            <div style="color: #16a34a; font-weight: 600; margin-top: 4px;">${distStr} away</div>
+        `);
         const startLatLng = markerRef.current.getLatLng();
         const endLatLng = L.latLng(newLat, newLng);
         animateMarker(markerRef.current, startLatLng, endLatLng, 3000);
@@ -149,7 +163,6 @@ const LiveMap = ({ workerName = 'Worker', bookingId, workerId, workerInitialCoor
       }
 
       // Calculate distance & ETA based on real coords
-      const dist = calculateDistanceKm(newLat, newLng, homeCoords[0], homeCoords[1]);
       setDistance(dist.toFixed(1));
       setEta(Math.max(1, Math.ceil(dist * 2.5))); // Approx ETA
 
