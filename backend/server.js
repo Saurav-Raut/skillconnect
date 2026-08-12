@@ -64,6 +64,7 @@ const reviewRoutes = require('./routes/reviewRoutes');
 const complaintRoutes = require('./routes/complaintRoutes');
 const appealRoutes = require('./routes/appealRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const chatbotRoutes = require('./routes/chatbotRoutes');
 
 // Route Mappings
 app.use('/api/auth', authRoutes);
@@ -74,6 +75,7 @@ app.use('/api/reviews', reviewRoutes);
 app.use('/api/complaints', complaintRoutes);
 app.use('/api/appeals', appealRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/chatbot', chatbotRoutes);
 
 // Error Handler Middleware
 const errorHandler = require('./middleware/errorHandler');
