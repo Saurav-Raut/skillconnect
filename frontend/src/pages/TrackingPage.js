@@ -139,19 +139,25 @@ const TrackingPage = () => {
               {status === 'accepted' ? 'Currently broadcasting live GPS' : 'Arrived'}
             </div>
             {status === 'accepted' && !showFaceScanner && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '10px' }}>
-                <button className="btn btn-primary btn-sm" onClick={() => { setScanType('checkin'); setShowFaceScanner(true); }}>
-                  Verify Worker Arrival (Check-In)
-                </button>
-                <button 
-                  className="btn btn-ghost btn-sm" 
-                  style={{ fontSize: '0.75rem', color: 'var(--text-muted)', padding: '4px' }} 
-                  onClick={handleInstantCheckIn}
-                  title="One-click demo checkin without camera"
-                >
-                  ⚡ Demo: Skip to Job in Progress
-                </button>
-              </div>
+              userInfo?.role === 'household' ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '10px' }}>
+                  <button className="btn btn-primary btn-sm" onClick={() => { setScanType('checkin'); setShowFaceScanner(true); }}>
+                    Verify Worker Arrival (Check-In)
+                  </button>
+                  <button 
+                    className="btn btn-ghost btn-sm" 
+                    style={{ fontSize: '0.75rem', color: 'var(--text-muted)', padding: '4px' }} 
+                    onClick={handleInstantCheckIn}
+                    title="One-click demo checkin without camera"
+                  >
+                    ⚡ Demo: Skip to Job in Progress
+                  </button>
+                </div>
+              ) : (
+                <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: '10px', fontStyle: 'italic' }}>
+                  Waiting for household to verify arrival...
+                </div>
+              )
             )}
           </div>
 
@@ -159,23 +165,31 @@ const TrackingPage = () => {
             <div style={{ position: 'absolute', left: '-20px', width: '12px', height: '12px', borderRadius: '50%', background: status === 'in_progress' ? 'var(--primary)' : (status === 'completed' ? 'var(--verified)' : 'var(--line)'), border: '2px solid var(--bg-card)' }}></div>
             <div style={{ fontWeight: 600, fontSize: '0.9rem', color: status === 'in_progress' ? 'var(--primary)' : (status === 'completed' ? 'var(--text-main)' : 'var(--text-muted)') }}>Job in progress</div>
             {status !== 'completed' && !showFaceScanner && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '10px' }}>
-                <button 
-                  className="btn btn-primary btn-sm" 
-                  style={{ background: 'var(--success)', border: 'none', fontWeight: 700 }} 
-                  onClick={() => { setScanType('checkout'); setShowFaceScanner(true); }}
-                >
-                  Verify Worker Checkout (Release Escrow)
-                </button>
-                <button 
-                  className="btn btn-ghost btn-sm" 
-                  style={{ fontSize: '0.75rem', color: 'var(--text-muted)', padding: '4px' }} 
-                  onClick={handleInstantCheckOut}
-                  title="One-click demo checkout without camera"
-                >
-                  ⚡ Demo: Instant Checkout & Release Escrow
-                </button>
-              </div>
+              userInfo?.role === 'household' ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '10px' }}>
+                  <button 
+                    className="btn btn-primary btn-sm" 
+                    style={{ background: 'var(--success)', border: 'none', fontWeight: 700 }} 
+                    onClick={() => { setScanType('checkout'); setShowFaceScanner(true); }}
+                  >
+                    Verify Worker Checkout (Release Escrow)
+                  </button>
+                  <button 
+                    className="btn btn-ghost btn-sm" 
+                    style={{ fontSize: '0.75rem', color: 'var(--text-muted)', padding: '4px' }} 
+                    onClick={handleInstantCheckOut}
+                    title="One-click demo checkout without camera"
+                  >
+                    ⚡ Demo: Instant Checkout & Release Escrow
+                  </button>
+                </div>
+              ) : (
+                status === 'in_progress' && (
+                  <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: '10px', fontStyle: 'italic' }}>
+                    Waiting for household to verify checkout...
+                  </div>
+                )
+              )
             )}
           </div>
 
