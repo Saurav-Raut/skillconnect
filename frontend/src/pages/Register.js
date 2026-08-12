@@ -53,7 +53,7 @@ const Register = () => {
     e.preventDefault();
     const payload = {
       name,
-      email: email || `${phone}@temp.com`, // dummy email if optional is left blank
+      email: role === 'household' ? (email || `${phone}@temp.com`) : `${phone}@temp.com`,
       phone,
       password: password || 'defaultPass123', // if password isn't in UI, give default
       role
@@ -200,7 +200,7 @@ const Register = () => {
               <div className="field" style={{ marginTop: '24px' }}>
                 <label>Trade / skill</label>
                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                  {['Electrician', 'Plumber', 'Carpenter', 'Cook', 'Cleaner', 'Daily labour'].map(s => (
+                  {['Electrician', 'Plumber', 'Carpenter', 'Cook', 'Cleaner', 'Daily Laborer'].map(s => (
                     <div 
                       key={s} 
                       onClick={() => setSkill(s)}
