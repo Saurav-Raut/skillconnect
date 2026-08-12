@@ -1,16 +1,34 @@
-import React, { useState, useEffect } from 'react';
-import { MessageSquare, X, Send, Globe, Mic, VolumeX } from 'lucide-react';
+import React, { useState, useEffect, useContext } from 'react';
+import { Link } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import { MessageSquare, X, Send, Globe, Mic, Volume2, VolumeX } from 'lucide-react';
 import { MOCK_BOT_RESPONSES, FAQ_DATA } from '../utils/constants';
+import { LanguageContext } from '../contexts/LanguageContext';
+import API from '../utils/api';
 
 const Chatbot = () => {
+  const { userInfo } = useSelector((state) => state.user);
+  const { t } = useContext(LanguageContext);
+
   const [isOpen, setIsOpen] = useState(false);
   const [language, setLanguage] = useState('en'); // en, hi, ta, te
   const [messages, setMessages] = useState([
-    { sender: 'bot', key: 'greeting', original: MOCK_BOT_RESPONSES.en[0] }
+    { sender: 'bot', key: 'greeting', text: 'Hello! I am your SkillConnect AI assistant. How can I help you today?' }
   ]);
   const [inputVal, setInputVal] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [voiceEnabled, setVoiceEnabled] = useState(false); // Speak out loud ONLY if voice mode is activated
+
+  // Persistent session ID for auditing chat history
+  const [sessionId] = useState(() => {
+    let id = sessionStorage.getItem('chatbot_session_id');
+    if (!id) {
+      id = 'sess_' + Math.random().toString(36).substring(2, 15) + '_' + Date.now();
+      sessionStorage.setItem('chatbot_session_id', id);
+    }
+    return id;
+  });
 
   // Stop speech when closed or unmounted
   useEffect(() => {
@@ -20,10 +38,41 @@ const Chatbot = () => {
     }
   }, [isOpen]);
 
-  // Translate existing chat history when language changes
+  // Load chat history from DB when widget is opened
+  useEffect(() => {
+    if (isOpen) {
+      const loadHistory = async () => {
+        try {
+          const res = await API.get(`/chatbot/history/${sessionId}`);
+          if (res.data.success && res.data.data.length > 0) {
+            const historyMsgs = [];
+            res.data.data.forEach(log => {
+              historyMsgs.push({ sender: 'user', text: log.message });
+              historyMsgs.push({
+                sender: 'bot',
+                text: log.botResponse,
+                escalated: log.escalated
+              });
+            });
+            setMessages(historyMsgs);
+          }
+        } catch (err) {
+          console.warn('[Chatbot] Failed to fetch session history:', err.message);
+        }
+      };
+      loadHistory();
+    }
+  }, [isOpen, sessionId]);
+
+  // Translate local fallback components if language changes
   useEffect(() => {
     setMessages(prev => prev.map(msg => {
-      if (msg.key === 'greeting') return { ...msg, text: MOCK_BOT_RESPONSES[language][0] };
+      if (msg.key === 'greeting') {
+        const langGreeting = MOCK_BOT_RESPONSES[language] 
+          ? MOCK_BOT_RESPONSES[language][0] 
+          : 'Hello! I am your SkillConnect AI assistant. How can I help you today?';
+        return { ...msg, text: langGreeting };
+      }
       if (msg.key && FAQ_DATA[msg.key]) {
         if (msg.sender === 'user') return { ...msg, text: FAQ_DATA[msg.key].q[language] };
         if (msg.sender === 'bot') return { ...msg, text: FAQ_DATA[msg.key].a[language] };
@@ -50,7 +99,6 @@ const Chatbot = () => {
       const targetLang = language === 'hi' ? 'hi-IN' : language === 'ta' ? 'ta-IN' : language === 'te' ? 'te-IN' : 'en-US';
       utterance.lang = targetLang;
       
-      // Broaden search to include the language name in the voice name (e.g., "Microsoft Hemant - Hindi")
       const voices = window.speechSynthesis.getVoices();
       const langName = language === 'hi' ? 'hindi' : language === 'ta' ? 'tamil' : language === 'te' ? 'telugu' : 'english';
       
@@ -72,34 +120,47 @@ const Chatbot = () => {
     }
   };
 
-  const handleSend = (textToSend = null, faqKey = null) => {
+  const handleSend = async (textToSend = null, faqKey = null) => {
     const text = textToSend || inputVal;
     if (!text.trim()) return;
 
-    // Add user message
-    const newMsg = { sender: 'user', text, original: text, key: faqKey };
-    setMessages(prev => [...prev, newMsg]);
+    // Add user message to UI
+    const userMsg = { sender: 'user', text, original: text, key: faqKey };
+    setMessages(prev => [...prev, userMsg]);
     setInputVal('');
 
-    // Fetch response
-    setTimeout(() => {
-      let responseText = "";
-      let botKey = faqKey;
-      
-      if (faqKey && FAQ_DATA[faqKey]) {
-        responseText = FAQ_DATA[faqKey].a[language];
-      } else {
-        const languageResponses = MOCK_BOT_RESPONSES[language] || MOCK_BOT_RESPONSES.en;
-        responseText = languageResponses[Math.floor(Math.random() * languageResponses.length)];
-        botKey = 'mock'; // random unmapped
+    try {
+      // Connect to backend API
+      const res = await API.post('/chatbot/message', {
+        text,
+        role: userInfo ? userInfo.role : 'guest',
+        sessionId
+      });
+
+      const { replyText, routeButton, escalated } = res.data.data;
+
+      // Add bot response to UI
+      setMessages(prev => [...prev, {
+        sender: 'bot',
+        text: replyText,
+        original: replyText,
+        routeButton,
+        escalated
+      }]);
+
+      // Speak response ONLY if user used the voice mic or enabled the speaker icon
+      if (voiceEnabled) {
+        speakText(replyText);
       }
-      
-      setMessages(prev => [...prev, { sender: 'bot', text: responseText, original: responseText, key: botKey }]);
-      speakText(responseText);
-    }, 600);
+    } catch (err) {
+      console.error('[Chatbot Engine API Error]:', err.message);
+      const fallbackReply = "Sorry, I am having trouble connecting to my database. Please try again shortly.";
+      setMessages(prev => [...prev, { sender: 'bot', text: fallbackReply, original: fallbackReply }]);
+    }
   };
 
   const triggerVoiceBooking = () => {
+    setVoiceEnabled(true); // Automatically enable speaking when mic is pressed
     setIsRecording(true);
     speakText(language === 'hi' ? "मैं सुन रहा हूँ..." : "Listening...");
     
@@ -147,13 +208,35 @@ const Chatbot = () => {
             <div>
               <h4 style={{ color: 'white', fontSize: '1.1rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
                 AI Assistant
-                {isSpeaking && <button onClick={stopSpeaking} style={{ background: 'rgba(255,255,255,0.2)', border: 'none', color: 'white', padding: '3px 8px', borderRadius: '12px', cursor: 'pointer', fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: '4px' }}><VolumeX size={12} /> Stop</button>}
+                {isSpeaking && (
+                  <button 
+                    onClick={stopSpeaking} 
+                    style={{ background: 'rgba(255,255,255,0.2)', border: 'none', color: 'white', padding: '3px 8px', borderRadius: '12px', cursor: 'pointer', fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: '4px' }}
+                  >
+                    <VolumeX size={12} /> Stop
+                  </button>
+                )}
               </h4>
               <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.85)' }}>Multilingual Onboarding Helper</p>
             </div>
-            <button onClick={toggleOpen} style={{ background: 'rgba(255,255,255,0.15)', border: 'none', color: 'white', cursor: 'pointer', width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: '0.2s' }}>
-              <X size={18} />
-            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <button 
+                onClick={() => {
+                  if (voiceEnabled) stopSpeaking();
+                  setVoiceEnabled(!voiceEnabled);
+                }} 
+                style={{ background: 'rgba(255,255,255,0.15)', border: 'none', color: 'white', cursor: 'pointer', width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: '0.2s' }}
+                title={voiceEnabled ? "Mute responses" : "Read responses out loud"}
+              >
+                {voiceEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
+              </button>
+              <button 
+                onClick={toggleOpen} 
+                style={{ background: 'rgba(255,255,255,0.15)', border: 'none', color: 'white', cursor: 'pointer', width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: '0.2s' }}
+              >
+                <X size={18} />
+              </button>
+            </div>
           </div>
 
           {/* Language Selector */}
@@ -190,7 +273,35 @@ const Chatbot = () => {
                   whiteSpace: 'pre-line'
                 }}
               >
-                {m.text || m.original}
+                <div>
+                  {m.text || m.original}
+                  {m.routeButton && (
+                    <div style={{ marginTop: '12px' }}>
+                      <Link 
+                        to={m.routeButton.route}
+                        onClick={() => setIsOpen(false)} // Close drawer on redirect navigation
+                        style={{
+                          display: 'inline-block',
+                          textDecoration: 'none',
+                          padding: '6px 14px',
+                          fontSize: '0.8rem',
+                          borderRadius: '999px',
+                          background: 'var(--primary)',
+                          color: 'white',
+                          fontWeight: 700,
+                          boxShadow: '0 2px 5px rgba(0,0,0,0.1)'
+                        }}
+                      >
+                        {m.routeButton.label}
+                      </Link>
+                    </div>
+                  )}
+                  {m.escalated && (
+                    <div style={{ marginTop: '8px', fontSize: '0.78rem', color: 'var(--warning)', fontWeight: 600 }}>
+                      ⚠️ Ticket generated for Admin response
+                    </div>
+                  )}
+                </div>
               </div>
             ))}
           </div>

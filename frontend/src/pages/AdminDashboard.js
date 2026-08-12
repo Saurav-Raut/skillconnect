@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import API from '../utils/api';
-import { Award, Star, ThumbsUp, ThumbsDown, ShieldAlert, CheckCircle, Clock, Filter, UserCheck, AlertTriangle } from 'lucide-react';
+import { Award, Star, ThumbsUp, ThumbsDown, ShieldAlert, CheckCircle, Clock, Filter, UserCheck, AlertTriangle, MessageSquare, Plus, Trash2, Edit, BookOpen, ArrowRightLeft, History, Ticket } from 'lucide-react';
 
 const AdminDashboard = () => {
   const location = useLocation();
@@ -25,6 +25,138 @@ const AdminDashboard = () => {
   const [bookingFilter, setBookingFilter] = useState('all');
   const [reviewFilter, setReviewFilter] = useState('all');
   const [loading, setLoading] = useState(false);
+
+  // Chatbot CMS States
+  const [chatbotSubTab, setChatbotSubTab] = useState('kb'); // 'kb' | 'routes' | 'logs' | 'tickets'
+  const [kbChunks, setKbChunks] = useState([]);
+  const [intentRoutes, setIntentRoutes] = useState([]);
+  const [chatLogs, setChatLogs] = useState([]);
+  const [supportTickets, setSupportTickets] = useState([]);
+  
+  // KB Chunk Form State
+  const [chunkForm, setChunkForm] = useState({ role: 'general', category: 'general', title: '', content: '', keywords: '' });
+  const [editingChunkId, setEditingChunkId] = useState(null);
+  
+  // Intent Route Form State
+  const [routeForm, setRouteForm] = useState({ intentName: '', route: '', buttonLabel: '' });
+  const [editingRouteId, setEditingRouteId] = useState(null);
+
+  const fetchChatbotCMSData = async () => {
+    setLoading(true);
+    try {
+      const resChunks = await API.get('/chatbot/admin/chunks');
+      setKbChunks(resChunks.data.data || []);
+
+      const resRoutes = await API.get('/chatbot/admin/routes');
+      setIntentRoutes(resRoutes.data.data || []);
+
+      const resLogs = await API.get('/chatbot/admin/logs');
+      setChatLogs(resLogs.data.data || []);
+
+      const resTickets = await API.get('/chatbot/admin/tickets');
+      setSupportTickets(resTickets.data.data || []);
+    } catch (err) {
+      console.error('[Chatbot CMS] Data fetch failed:', err.message);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    if (activeTab === 'chatbot') {
+      fetchChatbotCMSData();
+    }
+  }, [activeTab]);
+
+  // KB Chunk Actions
+  const handleSaveKBChunk = async (e) => {
+    e.preventDefault();
+    try {
+      if (editingChunkId) {
+        await API.put(`/chatbot/admin/chunks/${editingChunkId}`, chunkForm);
+        alert('FAQ chunk updated successfully!');
+      } else {
+        await API.post('/chatbot/admin/chunks', chunkForm);
+        alert('FAQ chunk created successfully!');
+      }
+      setChunkForm({ role: 'general', category: 'general', title: '', content: '', keywords: '' });
+      setEditingChunkId(null);
+      fetchChatbotCMSData();
+    } catch (err) {
+      alert(err.response?.data?.error || 'Failed to save FAQ chunk');
+    }
+  };
+
+  const handleEditKBChunk = (chunk) => {
+    setEditingChunkId(chunk._id);
+    setChunkForm({
+      role: chunk.role,
+      category: chunk.category,
+      title: chunk.title,
+      content: chunk.content,
+      keywords: Array.isArray(chunk.keywords) ? chunk.keywords.join(', ') : chunk.keywords || ''
+    });
+  };
+
+  const handleDeleteKBChunk = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this FAQ chunk?')) return;
+    try {
+      await API.delete(`/chatbot/admin/chunks/${id}`);
+      alert('FAQ chunk deleted.');
+      fetchChatbotCMSData();
+    } catch (err) {
+      alert(err.response?.data?.error || 'Failed to delete chunk');
+    }
+  };
+
+  // Intent Route Actions
+  const handleSaveIntentRoute = async (e) => {
+    e.preventDefault();
+    try {
+      if (editingRouteId) {
+        await API.put(`/chatbot/admin/routes/${editingRouteId}`, routeForm);
+        alert('Route mapping updated!');
+      } else {
+        await API.post('/chatbot/admin/routes', routeForm);
+        alert('Route mapping created!');
+      }
+      setRouteForm({ intentName: '', route: '', buttonLabel: '' });
+      setEditingRouteId(null);
+      fetchChatbotCMSData();
+    } catch (err) {
+      alert(err.response?.data?.error || 'Failed to save route mapping');
+    }
+  };
+
+  const handleEditIntentRoute = (r) => {
+    setEditingRouteId(r._id);
+    setRouteForm({
+      intentName: r.intentName,
+      route: r.route,
+      buttonLabel: r.buttonLabel
+    });
+  };
+
+  const handleDeleteIntentRoute = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this route mapping?')) return;
+    try {
+      await API.delete(`/chatbot/admin/routes/${id}`);
+      alert('Route mapping deleted.');
+      fetchChatbotCMSData();
+    } catch (err) {
+      alert(err.response?.data?.error || 'Failed to delete route mapping');
+    }
+  };
+
+  // Support Ticket Actions
+  const handleResolveTicket = async (ticketId, status) => {
+    try {
+      await API.put(`/chatbot/admin/tickets/${ticketId}`, { status });
+      alert(`Support ticket marked as ${status}`);
+      fetchChatbotCMSData();
+    } catch (err) {
+      alert(err.response?.data?.error || 'Failed to update ticket');
+    }
+  };
 
   const fetchAdminData = async () => {
     setLoading(true);
@@ -257,6 +389,24 @@ const AdminDashboard = () => {
           }}
         >
           <AlertTriangle size={18} /> Disputes & Appeals ({complaints.length + appeals.length + disputedBookings.length})
+        </button>
+        <button 
+          onClick={() => setActiveTab('chatbot')}
+          style={{
+            padding: '12px 20px',
+            border: 'none',
+            background: 'none',
+            fontWeight: 700,
+            fontSize: '0.95rem',
+            color: activeTab === 'chatbot' ? 'var(--primary)' : 'var(--text-muted)',
+            borderBottom: activeTab === 'chatbot' ? '3px solid var(--primary)' : '3px solid transparent',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}
+        >
+          <MessageSquare size={18} /> Chatbot CMS
         </button>
       </div>
 
@@ -723,8 +873,256 @@ const AdminDashboard = () => {
                   )}
                 </tbody>
               </table>
+          </div>
+        </div>
+      </div>
+      )}
+
+      {/* TAB 5: CHATBOT CMS */}
+      {activeTab === 'chatbot' && (
+        <div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '10px' }}>
+            <div style={{ fontWeight: 700, fontSize: '1.25rem', color: 'var(--text)' }}>AI Chatbot Management System</div>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button onClick={() => setChatbotSubTab('kb')} className={`btn btn-sm ${chatbotSubTab === 'kb' ? 'btn-primary' : 'btn-ghost'}`} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><BookOpen size={14} /> Knowledge Base</button>
+              <button onClick={() => setChatbotSubTab('routes')} className={`btn btn-sm ${chatbotSubTab === 'routes' ? 'btn-primary' : 'btn-ghost'}`} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><ArrowRightLeft size={14} /> Intent Redirects</button>
+              <button onClick={() => setChatbotSubTab('logs')} className={`btn btn-sm ${chatbotSubTab === 'logs' ? 'btn-primary' : 'btn-ghost'}`} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><History size={14} /> Conversation Logs</button>
+              <button onClick={() => setChatbotSubTab('tickets')} className={`btn btn-sm ${chatbotSubTab === 'tickets' ? 'btn-primary' : 'btn-ghost'}`} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Ticket size={14} /> Support Queue ({supportTickets.filter(t => t.status === 'open').length})</button>
             </div>
           </div>
+
+          {/* SUB-TAB 1: KNOWLEDGE BASE FAQ CMS */}
+          {chatbotSubTab === 'kb' && (
+            <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 2fr', gap: '24px' }}>
+              {/* Form card */}
+              <div className="card">
+                <div style={{ fontWeight: 700, marginBottom: '14px' }}>{editingChunkId ? 'Edit FAQ Segment' : 'Add FAQ Segment'}</div>
+                <form onSubmit={handleSaveKBChunk}>
+                  <div className="field">
+                    <label>Title / Question</label>
+                    <input type="text" className="input" placeholder="e.g. How Escrow Works" value={chunkForm.title} onChange={e => setChunkForm({...chunkForm, title: e.target.value})} required />
+                  </div>
+                  <div className="field" style={{ marginTop: '12px' }}>
+                    <label>Target Role</label>
+                    <select className="input" value={chunkForm.role} onChange={e => setChunkForm({...chunkForm, role: e.target.value})} required>
+                      <option value="general">General (All)</option>
+                      <option value="household">Household (Customer)</option>
+                      <option value="worker">Worker (Partner)</option>
+                    </select>
+                  </div>
+                  <div className="field" style={{ marginTop: '12px' }}>
+                    <label>Category</label>
+                    <input type="text" className="input" placeholder="e.g. payments, safety" value={chunkForm.category} onChange={e => setChunkForm({...chunkForm, category: e.target.value})} required />
+                  </div>
+                  <div className="field" style={{ marginTop: '12px' }}>
+                    <label>Answer Content</label>
+                    <textarea className="input" rows="5" placeholder="Detailed answer used for AI training context..." value={chunkForm.content} onChange={e => setChunkForm({...chunkForm, content: e.target.value})} required></textarea>
+                  </div>
+                  <div className="field" style={{ marginTop: '12px' }}>
+                    <label>Keywords (comma-separated)</label>
+                    <input type="text" className="input" placeholder="e.g. escrow, verify, fee" value={chunkForm.keywords} onChange={e => setChunkForm({...chunkForm, keywords: e.target.value})} />
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px', marginTop: '18px' }}>
+                    <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>{editingChunkId ? 'Update Chunk' : 'Create Chunk'}</button>
+                    {editingChunkId && <button type="button" className="btn btn-secondary" onClick={() => { setEditingChunkId(null); setChunkForm({ role: 'general', category: 'general', title: '', content: '', keywords: '' }); }}>Cancel</button>}
+                  </div>
+                </form>
+              </div>
+
+              {/* List table */}
+              <div className="card" style={{ padding: 0, overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr style={{ background: 'var(--bg-main)' }}>
+                      <th style={{ padding: '12px 14px', borderBottom: '1px solid var(--line)', textAlign: 'left', fontSize: '0.75rem' }}>FAQ Details</th>
+                      <th style={{ padding: '12px 14px', borderBottom: '1px solid var(--line)', textAlign: 'left', fontSize: '0.75rem' }}>Category & Role</th>
+                      <th style={{ padding: '12px 14px', borderBottom: '1px solid var(--line)', textAlign: 'right', fontSize: '0.75rem' }}>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {kbChunks.length === 0 ? (
+                      <tr><td colSpan="3" style={{ padding: '20px', textAlign: 'center', color: 'var(--text-muted)' }}>No FAQ chunks found.</td></tr>
+                    ) : (
+                      kbChunks.map(chunk => (
+                        <tr key={chunk._id} style={{ borderBottom: '1px solid var(--line)' }}>
+                          <td style={{ padding: '14px', maxWidth: '300px' }}>
+                            <div style={{ fontWeight: 700, fontSize: '0.88rem' }}>{chunk.title}</div>
+                            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', marginTop: '4px' }}>{chunk.content}</div>
+                          </td>
+                          <td style={{ padding: '14px' }}>
+                            <span className="badge" style={{ textTransform: 'uppercase' }}>{chunk.role}</span>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px' }}>{chunk.category}</div>
+                          </td>
+                          <td style={{ padding: '14px', textAlign: 'right' }}>
+                            <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
+                              <button onClick={() => handleEditKBChunk(chunk)} className="btn btn-secondary btn-sm" style={{ padding: '4px 8px' }}><Edit size={12} /></button>
+                              <button onClick={() => handleDeleteKBChunk(chunk._id)} className="btn btn-danger btn-sm" style={{ padding: '4px 8px' }}><Trash2 size={12} /></button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* SUB-TAB 2: INTENT NAVIGATION MAPS */}
+          {chatbotSubTab === 'routes' && (
+            <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 2fr', gap: '24px' }}>
+              {/* Form */}
+              <div className="card">
+                <div style={{ fontWeight: 700, marginBottom: '14px' }}>{editingRouteId ? 'Edit Redirect Route' : 'Add Redirect Route'}</div>
+                <form onSubmit={handleSaveIntentRoute}>
+                  <div className="field">
+                    <label>Intent Name</label>
+                    <input type="text" className="input" placeholder="e.g. register_as_worker" value={routeForm.intentName} onChange={e => setRouteForm({...routeForm, intentName: e.target.value})} required />
+                  </div>
+                  <div className="field" style={{ marginTop: '12px' }}>
+                    <label>Frontend Route Path</label>
+                    <input type="text" className="input" placeholder="e.g. /register" value={routeForm.route} onChange={e => setRouteForm({...routeForm, route: e.target.value})} required />
+                  </div>
+                  <div className="field" style={{ marginTop: '12px' }}>
+                    <label>Button Display Text</label>
+                    <input type="text" className="input" placeholder="e.g. Join as Partner" value={routeForm.buttonLabel} onChange={e => setRouteForm({...routeForm, buttonLabel: e.target.value})} required />
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px', marginTop: '18px' }}>
+                    <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>{editingRouteId ? 'Save Route' : 'Add Route'}</button>
+                    {editingRouteId && <button type="button" className="btn btn-secondary" onClick={() => { setEditingRouteId(null); setRouteForm({ intentName: '', route: '', buttonLabel: '' }); }}>Cancel</button>}
+                  </div>
+                </form>
+              </div>
+
+              {/* Table */}
+              <div className="card" style={{ padding: 0, overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr style={{ background: 'var(--bg-main)' }}>
+                      <th style={{ padding: '12px 14px', borderBottom: '1px solid var(--line)', textAlign: 'left', fontSize: '0.75rem' }}>Intent Key</th>
+                      <th style={{ padding: '12px 14px', borderBottom: '1px solid var(--line)', textAlign: 'left', fontSize: '0.75rem' }}>Target Route</th>
+                      <th style={{ padding: '12px 14px', borderBottom: '1px solid var(--line)', textAlign: 'left', fontSize: '0.75rem' }}>Button Text</th>
+                      <th style={{ padding: '12px 14px', borderBottom: '1px solid var(--line)', textAlign: 'right', fontSize: '0.75rem' }}>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {intentRoutes.length === 0 ? (
+                      <tr><td colSpan="4" style={{ padding: '20px', textAlign: 'center', color: 'var(--text-muted)' }}>No intent redirects defined.</td></tr>
+                    ) : (
+                      intentRoutes.map(r => (
+                        <tr key={r._id} style={{ borderBottom: '1px solid var(--line)' }}>
+                          <td style={{ padding: '14px', fontWeight: 600, fontSize: '0.85rem' }}>{r.intentName}</td>
+                          <td style={{ padding: '14px', fontFamily: 'monospace', fontSize: '0.8rem' }}>{r.route}</td>
+                          <td style={{ padding: '14px', fontSize: '0.85rem' }}>{r.buttonLabel}</td>
+                          <td style={{ padding: '14px', textAlign: 'right' }}>
+                            <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
+                              <button onClick={() => handleEditIntentRoute(r)} className="btn btn-secondary btn-sm" style={{ padding: '4px 8px' }}><Edit size={12} /></button>
+                              <button onClick={() => handleDeleteIntentRoute(r._id)} className="btn btn-danger btn-sm" style={{ padding: '4px 8px' }}><Trash2 size={12} /></button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* SUB-TAB 3: CHATLOGS AUDIT VIEWER */}
+          {chatbotSubTab === 'logs' && (
+            <div className="card" style={{ padding: 0, overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ background: 'var(--bg-main)' }}>
+                    <th style={{ padding: '12px 14px', borderBottom: '1px solid var(--line)', textAlign: 'left', fontSize: '0.75rem' }}>Date & User</th>
+                    <th style={{ padding: '12px 14px', borderBottom: '1px solid var(--line)', textAlign: 'left', fontSize: '0.75rem' }}>Session ID</th>
+                    <th style={{ padding: '12px 14px', borderBottom: '1px solid var(--line)', textAlign: 'left', fontSize: '0.75rem' }}>Intent / Lang</th>
+                    <th style={{ padding: '12px 14px', borderBottom: '1px solid var(--line)', textAlign: 'left', fontSize: '0.75rem' }}>Message exchanged</th>
+                    <th style={{ padding: '12px 14px', borderBottom: '1px solid var(--line)', textAlign: 'center', fontSize: '0.75rem' }}>Escalated</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {chatLogs.length === 0 ? (
+                    <tr><td colSpan="5" style={{ padding: '20px', textAlign: 'center', color: 'var(--text-muted)' }}>No chatbot conversation logs found.</td></tr>
+                  ) : (
+                    chatLogs.map(log => (
+                      <tr key={log._id} style={{ borderBottom: '1px solid var(--line)' }}>
+                        <td style={{ padding: '14px', fontSize: '0.85rem' }}>
+                          <div style={{ fontWeight: 600 }}>{log.user?.name || 'Guest User'}</div>
+                          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'capitalize' }}>{log.role}</div>
+                          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px' }}>{new Date(log.createdAt).toLocaleTimeString()}</div>
+                        </td>
+                        <td style={{ padding: '14px', fontFamily: 'monospace', fontSize: '0.75rem', color: 'var(--text-muted)' }}>{log.sessionId.slice(0, 10)}...</td>
+                        <td style={{ padding: '14px', fontSize: '0.8rem' }}>
+                          <span className="badge" style={{ fontWeight: 600 }}>{log.detectedIntent}</span>
+                          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px' }}>Lang: {log.detectedLanguage.toUpperCase()}</div>
+                        </td>
+                        <td style={{ padding: '14px', fontSize: '0.85rem', maxWidth: '350px' }}>
+                          <div style={{ color: 'var(--text-strong)' }}><strong>User:</strong> "{log.message}"</div>
+                          <div style={{ color: 'var(--text-muted)', marginTop: '4px' }}><strong>Bot:</strong> "{log.botResponse}"</div>
+                        </td>
+                        <td style={{ padding: '14px', textAlign: 'center' }}>
+                          {log.escalated ? <span style={{ color: 'var(--danger)', fontWeight: 700 }}>🚨 YES</span> : <span style={{ color: 'var(--text-muted)' }}>No</span>}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {/* SUB-TAB 4: ESCALATED TICKETS QUEUE */}
+          {chatbotSubTab === 'tickets' && (
+            <div className="card" style={{ padding: 0, overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ background: 'var(--bg-main)' }}>
+                    <th style={{ padding: '12px 14px', borderBottom: '1px solid var(--line)', textAlign: 'left', fontSize: '0.75rem' }}>Ticket Created</th>
+                    <th style={{ padding: '12px 14px', borderBottom: '1px solid var(--line)', textAlign: 'left', fontSize: '0.75rem' }}>User Context</th>
+                    <th style={{ padding: '12px 14px', borderBottom: '1px solid var(--line)', textAlign: 'left', fontSize: '0.75rem' }}>Escalation Reason</th>
+                    <th style={{ padding: '12px 14px', borderBottom: '1px solid var(--line)', textAlign: 'left', fontSize: '0.75rem' }}>Status</th>
+                    <th style={{ padding: '12px 14px', borderBottom: '1px solid var(--line)', textAlign: 'right', fontSize: '0.75rem' }}>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {supportTickets.length === 0 ? (
+                    <tr><td colSpan="5" style={{ padding: '20px', textAlign: 'center', color: 'var(--text-muted)' }}>No tickets found in the queue.</td></tr>
+                  ) : (
+                    supportTickets.map(t => (
+                      <tr key={t._id} style={{ borderBottom: '1px solid var(--line)' }}>
+                        <td style={{ padding: '14px', fontSize: '0.85rem' }}>
+                          <div>{new Date(t.createdAt).toLocaleDateString()}</div>
+                          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{new Date(t.createdAt).toLocaleTimeString()}</div>
+                        </td>
+                        <td style={{ padding: '14px', fontSize: '0.85rem' }}>
+                          <div style={{ fontWeight: 600 }}>{t.user?.name || 'User'}</div>
+                          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{t.user?.email || 'N/A'}</div>
+                          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'capitalize' }}>Role: {t.user?.role}</div>
+                        </td>
+                        <td style={{ padding: '14px', fontSize: '0.85rem', maxWidth: '300px' }}>
+                          <div style={{ fontStyle: 'italic' }}>"{t.issueSummary}"</div>
+                        </td>
+                        <td style={{ padding: '14px' }}>
+                          <span className={`badge ${t.status === 'open' ? 'badge-danger' : 'badge-verified'}`} style={{ textTransform: 'uppercase' }}>
+                            {t.status}
+                          </span>
+                        </td>
+                        <td style={{ padding: '14px', textAlign: 'right' }}>
+                          {t.status === 'open' ? (
+                            <button onClick={() => handleResolveTicket(t._id, 'resolved')} className="btn btn-primary btn-sm">Resolve Ticket</button>
+                          ) : (
+                            <span style={{ color: 'var(--success)', fontWeight: 600 }}>Resolved ✓</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       )}
     </div>
