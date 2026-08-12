@@ -138,7 +138,7 @@ module.exports = (io) => {
           }
         }
         
-        await Worker.findByIdAndUpdate(workerId, { isOnline });
+        await Worker.findOneAndUpdate({ $or: [{ _id: workerId }, { user: workerId }] }, { isOnline });
         console.log(`Worker ${workerId} isOnline set to ${isOnline}`);
       } catch (err) {
         console.error('Toggle Error:', err.message);
@@ -188,7 +188,7 @@ module.exports = (io) => {
         // Update Worker coordinates in database if sender is worker
         if (workerId && role === 'worker') {
           await Worker.findOneAndUpdate(
-            { _id: workerId },
+            { $or: [{ _id: workerId }, { user: workerId }] },
             {
               location: {
                 type: 'Point',
@@ -465,9 +465,9 @@ module.exports = (io) => {
         // Start 15-20s grace period before marking offline
         const timeout = setTimeout(async () => {
           try {
-            await Worker.findByIdAndUpdate(wid, { isOnline: false });
+            await Worker.findOneAndUpdate({ $or: [{ _id: wid }, { user: wid }] }, { isOnline: false });
             disconnectTimeouts.delete(wid);
-            console.log(`Worker ${wid} marked offline after 15s grace period.`);
+            console.log(`Worker ${wid} marked offline after 18s grace period.`);
           } catch(err) {
             console.error('Disconnect Grace Error:', err.message);
           }
