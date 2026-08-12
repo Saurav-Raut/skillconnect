@@ -110,7 +110,7 @@ const WorkerJobsPage = () => {
         <div className="card" style={{ padding: 0, display: 'flex', flexDirection: 'column' }}>
           <div style={{ padding: '20px', borderBottom: '1px solid var(--line)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div style={{ fontWeight: 700 }}>Past Jobs</div>
-            <span className="badge" style={{ background: 'var(--color-darkest)', color: 'var(--text-light)' }}>{completedJobs.length > 0 ? completedJobs.length : 3} total</span>
+            <span className="badge" style={{ background: 'var(--color-darkest)', color: 'var(--text-light)' }}>{completedJobs.length} total</span>
           </div>
 
           <div style={{ overflowX: 'auto' }}>
@@ -123,34 +123,12 @@ const WorkerJobsPage = () => {
                 </tr>
               </thead>
               <tbody>
-                {/* Fallback demo data if no completed jobs */}
                 {completedJobs.length === 0 && (
-                  <>
-                    <tr>
-                      <td style={{ padding: '16px 20px', fontSize: '0.86rem', borderBottom: '1px solid var(--line)' }}>
-                        <div style={{ fontWeight: 600 }}>Fan Installation</div>
-                        <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginTop: '2px' }}>Mohan Rao</div>
-                      </td>
-                      <td style={{ padding: '16px 20px', fontSize: '0.86rem', borderBottom: '1px solid var(--line)' }}>Jul 18, 2026</td>
-                      <td style={{ padding: '16px 20px', fontSize: '0.86rem', borderBottom: '1px solid var(--line)', textAlign: 'right', fontWeight: 600 }}>₹450</td>
-                    </tr>
-                    <tr>
-                      <td style={{ padding: '16px 20px', fontSize: '0.86rem', borderBottom: '1px solid var(--line)' }}>
-                        <div style={{ fontWeight: 600 }}>Switchboard Repair</div>
-                        <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginTop: '2px' }}>Priya Reddy</div>
-                      </td>
-                      <td style={{ padding: '16px 20px', fontSize: '0.86rem', borderBottom: '1px solid var(--line)' }}>Jul 15, 2026</td>
-                      <td style={{ padding: '16px 20px', fontSize: '0.86rem', borderBottom: '1px solid var(--line)', textAlign: 'right', fontWeight: 600 }}>₹200</td>
-                    </tr>
-                    <tr>
-                      <td style={{ padding: '16px 20px', fontSize: '0.86rem', borderBottom: '1px solid var(--line)' }}>
-                        <div style={{ fontWeight: 600 }}>AC Wiring</div>
-                        <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginTop: '2px' }}>Suresh Kumar</div>
-                      </td>
-                      <td style={{ padding: '16px 20px', fontSize: '0.86rem', borderBottom: '1px solid var(--line)' }}>Jul 10, 2026</td>
-                      <td style={{ padding: '16px 20px', fontSize: '0.86rem', borderBottom: '1px solid var(--line)', textAlign: 'right', fontWeight: 600 }}>₹1200</td>
-                    </tr>
-                  </>
+                  <tr>
+                    <td colSpan="3" style={{ padding: '24px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                      No completed jobs yet.
+                    </td>
+                  </tr>
                 )}
                 {completedJobs.map(job => (
                   <tr key={job._id}>

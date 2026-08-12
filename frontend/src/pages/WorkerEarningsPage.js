@@ -3,22 +3,49 @@ import { useSelector } from 'react-redux';
 
 const WorkerEarningsPage = () => {
   const { userInfo } = useSelector((state) => state.user);
+  const { bookingsList } = useSelector((state) => state.booking);
 
-  // Hardcoded stats for visual appeal as requested
-  const totalGross = 4200;
+  // Dynamic calculations based on real bookings
+  const completedJobs = bookingsList ? bookingsList.filter(b => b.status === 'completed') : [];
+  const totalGross = completedJobs.reduce((sum, b) => sum + (b.totalAmount || 0), 0);
+  
   const platformFeePercentage = 10;
   const platformFeeAmount = (totalGross * platformFeePercentage) / 100;
   const totalNet = totalGross - platformFeeAmount;
+  
+  const jobsDone = completedJobs.length;
 
-  const weeklyData = [
-    { day: 'Mon', amount: 450, height: '40%' },
-    { day: 'Tue', amount: 800, height: '70%' },
-    { day: 'Wed', amount: 200, height: '20%' },
-    { day: 'Thu', amount: 1200, height: '95%' },
-    { day: 'Fri', amount: 600, height: '55%' },
-    { day: 'Sat', amount: 950, height: '80%' },
-    { day: 'Sun', amount: 0, height: '5%' }
-  ];
+  // Real history for breakdown
+  const historyData = completedJobs.map(job => ({
+    title: job.skillRequested || job.skill || 'General task',
+    date: new Date(job.createdAt).toLocaleDateString(),
+    amount: job.totalAmount || 0,
+    isDeduction: false
+  }));
+  if (platformFeeAmount > 0) {
+    historyData.push({
+      title: 'Platform Deduction',
+      date: 'Auto-debited',
+      amount: platformFeeAmount,
+      isDeduction: true
+    });
+  }
+
+  // Real graph data based on last 7 days (or day of week if simplified)
+  // Group by day of week for the chart
+  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const groupedByDay = { Mon: 0, Tue: 0, Wed: 0, Thu: 0, Fri: 0, Sat: 0, Sun: 0 };
+  
+  completedJobs.forEach(job => {
+    const d = new Date(job.createdAt);
+    const dayName = days[d.getDay()];
+    groupedByDay[dayName] += (job.totalAmount || 0);
+  });
+
+  const weeklyData = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => ({
+    day,
+    amount: groupedByDay[day]
+  }));
 
   return (
     <div className="fade-in">
@@ -34,7 +61,7 @@ const WorkerEarningsPage = () => {
         <div className="card" style={{ padding: '24px' }}>
           <div style={{ fontSize: '0.8rem', color: 'var(--text-light)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Gross Earnings (Week)</div>
           <div className="heading" style={{ fontSize: '2rem', margin: '8px 0 4px', color: 'var(--text-main)' }}>₹{totalGross}</div>
-          <div style={{ fontSize: '0.8rem', color: 'var(--success)', fontWeight: 600 }}>12 Jobs Completed</div>
+          <div style={{ fontSize: '0.8rem', color: 'var(--success)', fontWeight: 600 }}>{jobsDone} Jobs Completed</div>
         </div>
         <div className="card" style={{ padding: '24px', background: 'rgba(239, 68, 68, 0.05)', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
           <div style={{ fontSize: '0.8rem', color: 'var(--danger)', opacity: 0.8, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Platform Fee (-{platformFeePercentage}%)</div>
@@ -93,43 +120,24 @@ const WorkerEarningsPage = () => {
           <div style={{ fontWeight: 700, marginBottom: '20px', fontSize: '1.1rem' }}>Transaction History</div>
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div>
-                <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>Fan Installation</div>
-                <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginTop: '2px' }}>Today, 11:30 AM</div>
-              </div>
-              <div style={{ fontWeight: 700, color: 'var(--success)' }}>+₹450</div>
-            </div>
-            
-            <div style={{ height: '1px', background: 'var(--line)' }}></div>
-
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div>
-                <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>Switchboard Repair</div>
-                <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginTop: '2px' }}>Yesterday</div>
-              </div>
-              <div style={{ fontWeight: 700, color: 'var(--success)' }}>+₹800</div>
-            </div>
-
-            <div style={{ height: '1px', background: 'var(--line)' }}></div>
-
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div>
-                <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>Platform Deduction</div>
-                <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginTop: '2px' }}>Auto-debited</div>
-              </div>
-              <div style={{ fontWeight: 700, color: 'var(--danger)' }}>-₹125</div>
-            </div>
-            
-            <div style={{ height: '1px', background: 'var(--line)' }}></div>
-            
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div>
-                <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>AC Maintenance</div>
-                <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginTop: '2px' }}>Wed, 4:00 PM</div>
-              </div>
-              <div style={{ fontWeight: 700, color: 'var(--success)' }}>+₹200</div>
-            </div>
+            {historyData.length === 0 ? (
+              <div style={{ color: 'var(--text-muted)' }}>No completed jobs yet.</div>
+            ) : (
+              historyData.map((item, i) => (
+                <React.Fragment key={i}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>{item.title}</div>
+                      <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginTop: '2px' }}>{item.date}</div>
+                    </div>
+                    <div style={{ fontWeight: 700, color: item.isDeduction ? 'var(--danger)' : 'var(--success)' }}>
+                      {item.isDeduction ? '-' : '+'}₹{item.amount}
+                    </div>
+                  </div>
+                  {i < historyData.length - 1 && <div style={{ height: '1px', background: 'var(--line)' }}></div>}
+                </React.Fragment>
+              ))
+            )}
           </div>
 
           <button className="btn btn-ghost btn-full" style={{ marginTop: '24px' }}>View all statements</button>

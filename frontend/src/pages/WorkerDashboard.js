@@ -20,6 +20,15 @@ const WorkerDashboard = () => {
   const pendingRequests = bookingsList.filter(b => b.status === 'pending');
   const scheduledJobs = bookingsList.filter(b => ['accepted', 'escrow_funded', 'in_progress'].includes(b.status));
 
+  const completedJobs = bookingsList.filter(b => b.status === 'completed');
+  const jobsDone = completedJobs.length;
+  const totalEarnings = completedJobs.reduce((sum, b) => sum + (b.totalAmount || 0), 0);
+  
+  const activeJobs = bookingsList.filter(b => ['accepted', 'escrow_funded', 'in_progress'].includes(b.status));
+  const escrowHeld = activeJobs.reduce((sum, b) => sum + (b.totalAmount || 0), 0);
+  
+  const rating = userInfo?.workerProfile?.ratingAvg || 5.0;
+
   return (
     <div className="fade-in">
       
@@ -35,21 +44,21 @@ const WorkerDashboard = () => {
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '18px', marginBottom: '26px' }}>
         <div className="card" style={{ padding: '18px 20px' }}>
-          <div style={{ fontSize: '0.76rem', color: 'var(--text-light)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>This week</div>
-          <div className="heading" style={{ fontSize: '1.7rem', margin: '6px 0 4px' }}>₹4,200</div>
-          <div style={{ fontSize: '0.76rem', color: 'var(--verified)', fontWeight: 600 }}>↑ 12% vs last week</div>
+          <div style={{ fontSize: '0.76rem', color: 'var(--text-light)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Gross Earnings</div>
+          <div className="heading" style={{ fontSize: '1.7rem', margin: '6px 0 4px' }}>₹{totalEarnings}</div>
+          <div style={{ fontSize: '0.76rem', color: 'var(--verified)', fontWeight: 600 }}>All time</div>
         </div>
         <div className="card" style={{ padding: '18px 20px' }}>
           <div style={{ fontSize: '0.76rem', color: 'var(--text-light)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Jobs done</div>
-          <div className="heading" style={{ fontSize: '1.7rem', marginTop: '6px' }}>28</div>
+          <div className="heading" style={{ fontSize: '1.7rem', marginTop: '6px' }}>{jobsDone}</div>
         </div>
         <div className="card" style={{ padding: '18px 20px' }}>
           <div style={{ fontSize: '0.76rem', color: 'var(--text-light)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Rating</div>
-          <div className="heading" style={{ fontSize: '1.7rem', marginTop: '6px' }}>4.8</div>
+          <div className="heading" style={{ fontSize: '1.7rem', marginTop: '6px' }}>{rating}</div>
         </div>
         <div className="card" style={{ padding: '18px 20px' }}>
           <div style={{ fontSize: '0.76rem', color: 'var(--text-light)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Escrow held</div>
-          <div className="heading" style={{ fontSize: '1.7rem', marginTop: '6px' }}>₹800</div>
+          <div className="heading" style={{ fontSize: '1.7rem', marginTop: '6px' }}>₹{escrowHeld}</div>
         </div>
       </div>
 
