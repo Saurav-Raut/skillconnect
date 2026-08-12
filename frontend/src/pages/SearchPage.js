@@ -251,7 +251,7 @@ const SearchPage = () => {
         .select-pill.active { background: var(--primary); color: #FFF; border-color: var(--primary); box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3); }
       `}</style>
 
-      {/* RAPIDO MATCHING MODAL */}
+      {/* LIVEMATCH MATCHING MODAL */}
       <LiveMatchMatchingModal
         isOpen={isLiveMatchOpen}
         onClose={() => setIsLiveMatchOpen(false)}

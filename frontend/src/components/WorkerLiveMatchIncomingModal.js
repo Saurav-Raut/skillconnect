@@ -11,7 +11,7 @@ import {
   Award 
 } from 'lucide-react';
 
-const WorkerRapidoIncomingModal = ({
+const WorkerLiveMatchIncomingModal = ({
   socket,
   userInfo,
   onOpenLiveMap
@@ -29,7 +29,7 @@ const WorkerRapidoIncomingModal = ({
       if (!data || (data.workerId && data.workerId !== userInfo._id)) {
         return;
       }
-      console.log('[WorkerRapidoIncomingModal] Received incoming request:', data);
+      console.log('[WorkerLiveMatchIncomingModal] Received incoming request:', data);
       setActiveRequest(data);
       setCountdown(data.countdownSeconds || 30);
       setCardStatus('incoming');
@@ -38,7 +38,7 @@ const WorkerRapidoIncomingModal = ({
     const handleAlreadyTaken = (data) => {
       if (!activeRequest || data.bookingId !== activeRequest.bookingId) return;
 
-      console.log('[WorkerRapidoIncomingModal] Job already taken:', data);
+      console.log('[WorkerLiveMatchIncomingModal] Job already taken:', data);
       setCardStatus('already_taken');
       setAlreadyTakenMessage(data.message || 'Job Already Taken by another nearby worker.');
 
@@ -52,18 +52,18 @@ const WorkerRapidoIncomingModal = ({
     const handleWinSuccess = (data) => {
       if (!activeRequest || data.bookingId !== activeRequest.bookingId) return;
 
-      console.log('[WorkerRapidoIncomingModal] Job Won:', data);
+      console.log('[WorkerLiveMatchIncomingModal] Job Won:', data);
       setCardStatus('won');
     };
 
-    socket.on('incomingRapidoRequest', handleIncomingRequest);
-    socket.on('rapidoJobAlreadyTaken', handleAlreadyTaken);
-    socket.on('rapidoJobWinSuccess', handleWinSuccess);
+    socket.on('incomingLiveMatchRequest', handleIncomingRequest);
+    socket.on('liveMatchJobAlreadyTaken', handleAlreadyTaken);
+    socket.on('liveMatchJobWinSuccess', handleWinSuccess);
 
     return () => {
-      socket.off('incomingRapidoRequest', handleIncomingRequest);
-      socket.off('rapidoJobAlreadyTaken', handleAlreadyTaken);
-      socket.off('rapidoJobWinSuccess', handleWinSuccess);
+      socket.off('incomingLiveMatchRequest', handleIncomingRequest);
+      socket.off('liveMatchJobAlreadyTaken', handleAlreadyTaken);
+      socket.off('liveMatchJobWinSuccess', handleWinSuccess);
     };
   }, [socket, userInfo, activeRequest]);
 
@@ -86,7 +86,7 @@ const WorkerRapidoIncomingModal = ({
 
   const handleAccept = () => {
     if (!socket || !activeRequest || !userInfo?._id) return;
-    socket.emit('acceptRapidoJob', {
+    socket.emit('acceptLiveMatchJob', {
       bookingId: activeRequest.bookingId,
       workerId: userInfo._id
     });
@@ -94,7 +94,7 @@ const WorkerRapidoIncomingModal = ({
 
   const handleReject = () => {
     if (socket && activeRequest && userInfo?._id) {
-      socket.emit('rejectRapidoJob', {
+      socket.emit('rejectLiveMatchJob', {
         bookingId: activeRequest.bookingId,
         workerId: userInfo._id
       });
@@ -148,7 +148,7 @@ const WorkerRapidoIncomingModal = ({
                 </div>
                 <div>
                   <span style={{ fontSize: '0.9rem', fontWeight: 800, color: '#818cf8', display: 'block' }}>
-                    NEW RAPIDO BOOKING BROADCAST
+                    NEW LIVEMATCH BOOKING BROADCAST
                   </span>
                   <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
                     Round {activeRequest.round || 1} • Nearest 5 Workers
@@ -340,4 +340,4 @@ const WorkerRapidoIncomingModal = ({
   );
 };
 
-export default WorkerRapidoIncomingModal;
+export default WorkerLiveMatchIncomingModal;

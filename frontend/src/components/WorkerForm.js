@@ -228,7 +228,7 @@ const WorkerForm = ({ initialData, onComplete }) => {
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', color: 'var(--text-main)' }}>
             <CheckCircle size={16} color="#22c55e" style={{ flexShrink: 0, marginTop: '2px' }} />
             <span style={{ lineHeight: 1.4 }}>
-              <b>Geo-Distance Ready:</b> Active for nearby filtering & Rapido live tracking
+              <b>Geo-Distance Ready:</b> Active for nearby filtering & LiveMatch live tracking
             </span>
           </div>
           <div className="mono" style={{ color: 'var(--text-light)', fontSize: '0.75rem', paddingLeft: '24px' }}>

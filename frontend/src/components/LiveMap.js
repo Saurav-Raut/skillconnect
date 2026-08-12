@@ -189,7 +189,7 @@ const LiveMap = ({ workerName = 'Karthik Reddy', bookingId = 'SK8291', workerId 
         color: 'var(--text-main)'
       }}>
         <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: arrived ? '#22c55e' : '#6366f1', display: 'inline-block', animation: !arrived ? 'pulse 1s infinite' : 'none' }}></span>
-        <span>{arrived ? 'ARRIVED AT DESTINATION' : 'LIVE RAPIDO GPS TRACKING'}</span>
+        <span>{arrived ? 'ARRIVED AT DESTINATION' : 'LIVE LIVEMATCH GPS TRACKING'}</span>
         <span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>• OSM Free</span>
       </div>
 

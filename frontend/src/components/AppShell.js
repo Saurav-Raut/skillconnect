@@ -2,8 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import SMSAlertModal from './SMSAlertModal';
-import RapidoMatchingModal from './RapidoMatchingModal';
-import WorkerRapidoIncomingModal from './WorkerRapidoIncomingModal';
+import LiveMatchMatchingModal from './LiveMatchMatchingModal';
+import WorkerLiveMatchIncomingModal from './WorkerLiveMatchIncomingModal';
 import LiveMap from './LiveMap';
 
 const AppShell = ({ children }) => {
@@ -18,20 +18,20 @@ const AppShell = ({ children }) => {
   const [avatarStr, setAvatarStr] = useState(null);
   const fileInputRef = useRef(null);
 
-  // Rapido Live Matching & Tracking state
-  const [isRapidoOpen, setIsRapidoOpen] = useState(false);
-  const [activeRapidoBookingId, setActiveRapidoBookingId] = useState('rapido_' + Date.now());
+  // LiveMatch Live Matching & Tracking state
+  const [isLiveMatchOpen, setIsLiveMatchOpen] = useState(false);
+  const [activeLiveMatchBookingId, setActiveLiveMatchBookingId] = useState('liveMatch_' + Date.now());
   const [showLiveMap, setShowLiveMap] = useState(false);
   const [liveMapBookingId, setLiveMapBookingId] = useState(null);
   const [liveMapWorker, setLiveMapWorker] = useState(null);
 
-  const startRapidoMatchHandler = () => {
+  const startLiveMatchMatchHandler = () => {
     const newBid = '64010a1b2c3d4e5f60718293'; // valid mongo format demo bookingId
-    setActiveRapidoBookingId(newBid);
-    setIsRapidoOpen(true);
+    setActiveLiveMatchBookingId(newBid);
+    setIsLiveMatchOpen(true);
 
     if (window.socket) {
-      window.socket.emit('startRapidoMatch', {
+      window.socket.emit('startLiveMatchMatch', {
         bookingId: newBid,
         skill: 'Electrician',
         coordinates: [80.5180, 16.5190], // Thullur AP default
@@ -197,29 +197,29 @@ const AppShell = ({ children }) => {
         </div>
       </aside>
       
-      <SMSAlertModal onStartRapidoMatch={startRapidoMatchHandler} />
+      <SMSAlertModal onStartLiveMatchMatch={startLiveMatchMatchHandler} />
 
-      {/* RAPIDO MODALS & REAL-TIME WIRE UP */}
-      <RapidoMatchingModal
-        isOpen={isRapidoOpen}
-        onClose={() => setIsRapidoOpen(false)}
-        bookingId={activeRapidoBookingId}
+      {/* LIVEMATCH MODALS & REAL-TIME WIRE UP */}
+      <LiveMatchMatchingModal
+        isOpen={isLiveMatchOpen}
+        onClose={() => setIsLiveMatchOpen(false)}
+        bookingId={activeLiveMatchBookingId}
         skillRequested="Electrician"
         radiusKm={5}
         socket={window.socket}
         userInfo={userInfo}
         onOpenLiveMap={(bid, wkr) => {
-          setLiveMapBookingId(bid || activeRapidoBookingId);
+          setLiveMapBookingId(bid || activeLiveMatchBookingId);
           setLiveMapWorker(wkr);
           setShowLiveMap(true);
         }}
       />
 
-      <WorkerRapidoIncomingModal
+      <WorkerLiveMatchIncomingModal
         socket={window.socket}
         userInfo={userInfo}
         onOpenLiveMap={(bid, wkr) => {
-          setLiveMapBookingId(bid || activeRapidoBookingId);
+          setLiveMapBookingId(bid || activeLiveMatchBookingId);
           setLiveMapWorker(wkr);
           setShowLiveMap(true);
         }}
@@ -227,7 +227,7 @@ const AppShell = ({ children }) => {
 
       {showLiveMap && (
         <LiveMap
-          bookingId={liveMapBookingId || activeRapidoBookingId}
+          bookingId={liveMapBookingId || activeLiveMatchBookingId}
           onClose={() => setShowLiveMap(false)}
           workerName={liveMapWorker?.user?.name || 'Karthik Reddy'}
           workerPhone={liveMapWorker?.user?.phone || '+91 98765 43210'}

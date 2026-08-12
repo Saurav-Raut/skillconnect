@@ -101,9 +101,9 @@ const App = () => {
       
       const handleRestoreSocketRooms = () => {
         console.log('[Socket] Connected to server.');
-        const activeRapido = sessionStorage.getItem('rapido_active_booking');
-        if (activeRapido) {
-          socket.emit('joinRoom', { room: `booking_${activeRapido}` });
+        const activeLiveMatch = sessionStorage.getItem('liveMatch_active_booking');
+        if (activeLiveMatch) {
+          socket.emit('joinRoom', { room: `booking_${activeLiveMatch}` });
         }
       };
 

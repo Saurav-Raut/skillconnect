@@ -113,7 +113,7 @@ const PaymentPage = () => {
             </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-            <Clock size={16} className="spin" /> Redirecting to Live Rapido GPS Tracking...
+            <Clock size={16} className="spin" /> Redirecting to Live LiveMatch GPS Tracking...
           </div>
         </div>
       ) : (

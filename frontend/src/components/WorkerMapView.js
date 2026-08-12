@@ -88,22 +88,22 @@ const WorkerMapView = ({ workers = [], center = [16.5186, 80.5158] }) => {
 
       const name = worker.user?.name || 'Skilled Worker';
       const skill = worker.skill || 'Professional';
-      const rate = worker.ratePerHour ? \`₹\${worker.ratePerHour * 8}/day\` : '₹800/day';
+      const rate = worker.ratePerHour ? `₹${worker.ratePerHour * 8}/day` : '₹800/day';
       const rating = worker.ratingAvg || 4.8;
       const idStatus = worker.idVerificationStatus === 'approved';
 
       const workerIcon = L.divIcon({
         className: 'custom-worker-pin',
-        html: \`<div style="
+        html: `<div style="
           padding: 4px 10px; border-radius: 99px;
           background: #6366f1; color: white; display: flex;
           align-items: center; gap: 6px; font-size: 12px; font-weight: 700;
           box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4); border: 2px solid #fff;
           white-space: nowrap; cursor: pointer;
         ">
-          <span>\${skill}</span>
-          <span style="background: rgba(255,255,255,0.25); padding: 1px 6px; border-radius: 10px;">★ \${rating}</span>
-        </div>\`,
+          <span>${skill}</span>
+          <span style="background: rgba(255,255,255,0.25); padding: 1px 6px; border-radius: 10px;">★ ${rating}</span>
+        </div>`,
         iconSize: [120, 32],
         iconAnchor: [60, 16]
       });
@@ -112,24 +112,24 @@ const WorkerMapView = ({ workers = [], center = [16.5186, 80.5158] }) => {
       popupContent.style.padding = '4px';
       popupContent.style.textAlign = 'center';
       popupContent.style.minWidth = '180px';
-      popupContent.innerHTML = \`
-        <div style="font-weight: 800; font-size: 15px; color: #0f172a; margin-bottom: 2px;">\${name}</div>
-        <div style="color: #475569; font-size: 12px; margin-bottom: 6px;">\${skill} \${idStatus ? '✓ Verified' : ''}</div>
+      popupContent.innerHTML = `
+        <div style="font-weight: 800; font-size: 15px; color: #0f172a; margin-bottom: 2px;">${name}</div>
+        <div style="color: #475569; font-size: 12px; margin-bottom: 6px;">${skill} ${idStatus ? '✓ Verified' : ''}</div>
         <div style="background: #f1f5f9; padding: 6px; border-radius: 6px; margin-bottom: 10px;">
-          <span style="font-weight: 700; color: #16a34a; font-size: 14px;">\${rate}</span>
-          <span style="color: #64748b; font-size: 12px;"> • ★ \${rating} (14 reviews)</span>
+          <span style="font-weight: 700; color: #16a34a; font-size: 14px;">${rate}</span>
+          <span style="color: #64748b; font-size: 12px;"> • ★ ${rating} (14 reviews)</span>
         </div>
-      \`;
+      `;
 
       const bookBtn = document.createElement('button');
       bookBtn.innerText = 'Book Now';
-      bookBtn.style.cssText = \`
+      bookBtn.style.cssText = `
         width: 100%; padding: 8px 12px; background: #6366f1; color: white;
         border: none; border-radius: 8px; font-weight: 700; cursor: pointer;
         font-size: 13px;
-      \`;
+      `;
       bookBtn.onclick = () => {
-        navigate(\`/booking?workerId=\${worker._id}\`);
+        navigate(`/booking?workerId=${worker._id}`);
       };
       popupContent.appendChild(bookBtn);
 

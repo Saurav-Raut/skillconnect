@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { Bell, Check, X, Navigation, MessageSquare, ShieldCheck, MapPin } from 'lucide-react';
 
-const SMSAlertModal = ({ onStartRapidoMatch }) => {
+const SMSAlertModal = ({ onStartLiveMatchMatch }) => {
   const [jobAlert, setJobAlert] = useState(null); // { bookingId, customerName, skill, amount, address, timestamp }
   const [customerSMS, setCustomerSMS] = useState(null); // { bookingId, workerName, status, message }
   const [showDemoBtn, setShowDemoBtn] = useState(true);
@@ -255,7 +255,7 @@ const SMSAlertModal = ({ onStartRapidoMatch }) => {
               boxShadow: '0 4px 14px rgba(99, 102, 241, 0.4)'
             }}
           >
-            <Navigation size={18} /> Track Live on Map (Rapido View)
+            <Navigation size={18} /> Track Live on Map (LiveMatch View)
           </button>
         </div>
       )}
@@ -283,10 +283,10 @@ const SMSAlertModal = ({ onStartRapidoMatch }) => {
         overflowX: 'auto',
         WebkitOverflowScrolling: 'touch'
       }}>
-        {onStartRapidoMatch && (
+        {onStartLiveMatchMatch && (
           <button
-            onClick={onStartRapidoMatch}
-            title="Initiate Rapido Live Matching broadcast to nearest 5 workers"
+            onClick={onStartLiveMatchMatch}
+            title="Initiate LiveMatch Live Matching broadcast to nearest 5 workers"
             style={{
               padding: '6px 10px',
               borderRadius: '999px',
@@ -304,7 +304,7 @@ const SMSAlertModal = ({ onStartRapidoMatch }) => {
               whiteSpace: 'nowrap'
             }}
           >
-            ⚡ Rapido Live Match
+            ⚡ LiveMatch Live Match
           </button>
         )}
 
