@@ -58,17 +58,26 @@ module.exports = (io) => {
         // Emit incoming request card to this worker
         io.emit('incomingLiveMatchRequest', {
           bookingId: broadcast.bookingId,
-          skill: broadcast.skillRequested,
-          householdName: broadcast.householdName || 'Household Customer',
-          distanceKm: w.distanceKm || 1.2,
-          approximateAddress: broadcast.householdAddressText || 'Thullur, Amaravati, AP',
-          ratePerHour: broadcast.ratePerHour || 150,
-          totalAmount: broadcast.totalAmount || 300,
+          skillRequested: broadcast.skillRequested,
+          householdLocation: broadcast.householdLocation,
+          householdAddressText: broadcast.householdAddressText,
+          householdName: broadcast.householdName,
+          ratePerHour: broadcast.ratePerHour,
+          totalAmount: broadcast.totalAmount,
           countdownSeconds: 30,
           round,
           workerId: wid
         });
       });
+
+      // Update Booking in DB so offline workers see it when they open app
+      try {
+        await Booking.findByIdAndUpdate(bookingId, {
+          $addToSet: { notifiedWorkers: { $each: currentRoundWorkerIds } }
+        });
+      } catch (err) {
+        console.error('Error updating notifiedWorkers:', err);
+      }
 
       broadcast.currentRoundWorkerIds = currentRoundWorkerIds;
       broadcast.round = round;
@@ -197,7 +206,8 @@ module.exports = (io) => {
               currentLocation: {
                 type: 'Point',
                 coordinates: [parseFloat(lng), parseFloat(lat)]
-              }
+              },
+              lastLocationUpdate: new Date()
             }
           );
         }
@@ -227,7 +237,7 @@ module.exports = (io) => {
      * Step 1-4: Household starts a LiveMatch Live Match broadcast
      */
     socket.on('startLiveMatchMatch', async ({
-      bookingId,
+      userId,
       skill,
       coordinates,
       addressText,
@@ -235,15 +245,45 @@ module.exports = (io) => {
       householdName,
       ratePerHour,
       totalAmount
-    }) => {
-      if (!bookingId || !coordinates || coordinates.length !== 2) return;
+    }, callback) => {
+      if (!userId || !coordinates || coordinates.length !== 2) return;
 
-      console.log(`[Live Match] Starting broadcast for booking ${bookingId} (${skill}) within ${radiusKm}km`);
+      try {
+        const HouseholdModel = require('../models/Household');
+        const household = await HouseholdModel.findOne({ user: userId });
+        if (!household) return;
 
-      socket.join(`booking_${bookingId}`);
+        // Create actual Booking document to persist this request for offline workers
+        const booking = await Booking.create({
+          household: household._id,
+          status: 'searching', // Pending until someone accepts
+          date: new Date(),
+          startTime: 'ASAP', // Live match is immediate
+          hours: totalAmount / ratePerHour || 2,
+          ratePerHour: parseFloat(ratePerHour) || 150,
+          totalAmount: parseFloat(totalAmount) || 300,
+          skillRequested: skill,
+          matchingMode: 'live_match_broadcast',
+          radiusKm: parseFloat(radiusKm) || 5,
+          householdLocation: {
+            type: 'Point',
+            coordinates: [parseFloat(coordinates[0]), parseFloat(coordinates[1])]
+          },
+          householdAddressText: addressText || 'Unknown location'
+        });
 
-      activeBroadcasts.set(bookingId.toString(), {
-        bookingId,
+        const bookingId = booking._id.toString();
+
+        console.log(`[Live Match] Starting broadcast for booking ${bookingId} (${skill}) within ${radiusKm}km`);
+
+        socket.join(`booking_${bookingId}`);
+
+        if (typeof callback === 'function') {
+          callback({ bookingId });
+        }
+
+        activeBroadcasts.set(bookingId, {
+          bookingId,
         skillRequested: skill,
         householdLocation: coordinates,
         householdAddressText: addressText || 'Thullur, Amaravati, AP',
@@ -259,6 +299,9 @@ module.exports = (io) => {
       });
 
       await broadcastRoundToWorkers(bookingId, 1);
+      } catch (err) {
+        console.error('Error starting live match:', err);
+      }
     });
 
     /**

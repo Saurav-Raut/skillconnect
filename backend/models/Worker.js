@@ -31,8 +31,7 @@ const WorkerSchema = new mongoose.Schema({
       default: 'Point'
     },
     coordinates: {
-      type: [Number],
-      default: [80.5180, 16.5190] // Thullur AP default
+      type: [Number]
     }
   },
   // currentLocation: Live, real-time GPS position streamed via sockets when online/active.
@@ -43,9 +42,12 @@ const WorkerSchema = new mongoose.Schema({
       default: 'Point'
     },
     coordinates: {
-      type: [Number],
-      default: [80.5180, 16.5190] // Real-time GPS coordinates
+      type: [Number]
     }
+  },
+  lastLocationUpdate: {
+    type: Date,
+    default: null
   },
   // isOnline: Controls general discoverability for new matches. Must be true to appear in Grid/Map/LiveMatch.
   isOnline: {

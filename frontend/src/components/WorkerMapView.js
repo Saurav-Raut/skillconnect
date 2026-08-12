@@ -92,6 +92,9 @@ const WorkerMapView = ({ workers = [], center = [16.5186, 80.5158] }) => {
       const rating = worker.ratingAvg || 4.8;
       const idStatus = worker.idVerificationStatus === 'approved';
 
+      const isLive = worker.lastLocationUpdate && (Date.now() - new Date(worker.lastLocationUpdate).getTime() < 60000);
+      const dotColor = isLive ? '#10b981' : '#94a3b8';
+
       const workerIcon = L.divIcon({
         className: 'custom-worker-pin',
         html: `<div style="
@@ -101,6 +104,7 @@ const WorkerMapView = ({ workers = [], center = [16.5186, 80.5158] }) => {
           box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4); border: 2px solid #fff;
           white-space: nowrap; cursor: pointer;
         ">
+          <span style="width: 8px; height: 8px; border-radius: 50%; background: ${dotColor};"></span>
           <span>${skill}</span>
           <span style="background: rgba(255,255,255,0.25); padding: 1px 6px; border-radius: 10px;">★ ${rating}</span>
         </div>`,

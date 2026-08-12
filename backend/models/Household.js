@@ -21,8 +21,7 @@ const HouseholdSchema = new mongoose.Schema({
       default: 'Point'
     },
     coordinates: {
-      type: [Number],
-      default: [72.8777, 19.0760] // Mumbai default
+      type: [Number]
     }
   },
   ratingAvg: {

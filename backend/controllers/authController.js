@@ -29,21 +29,27 @@ exports.register = async (req, res) => {
 
     // Create role-specific profile
     if (user.role === 'worker') {
-      await Worker.create({
+      const workerPayload = {
         user: user._id,
         skill: skill || 'Daily Laborer',
         experience: experience || 1,
         ratePerHour: ratePerHour || 100,
-        bio: bio || '',
-        location: { type: 'Point', coordinates: (coordinates && coordinates.length === 2) ? coordinates : [72.8777, 19.0760] }
-      });
+        bio: bio || ''
+      };
+      if (coordinates && coordinates.length === 2) {
+        workerPayload.location = { type: 'Point', coordinates };
+      }
+      await Worker.create(workerPayload);
     } else if (user.role === 'household') {
-      await Household.create({
+      const householdPayload = {
         user: user._id,
         address: address || 'Not specified',
-        city: city || 'Not specified',
-        location: { type: 'Point', coordinates: (coordinates && coordinates.length === 2) ? coordinates : [72.8777, 19.0760] }
-      });
+        city: city || 'Not specified'
+      };
+      if (coordinates && coordinates.length === 2) {
+        householdPayload.location = { type: 'Point', coordinates };
+      }
+      await Household.create(householdPayload);
     }
 
     // Generate random 6-digit OTP
@@ -124,10 +130,11 @@ exports.login = async (req, res) => {
       if (role === 'worker') {
         await Worker.create({
           user: user._id,
-          skills: ['Electrician', 'Plumber'],
-          experienceYears: 4,
+          skill: 'Electrician',
+          experience: 4,
           ratePerHour: 300,
           bio: 'Experienced home services professional',
+          // Only test workers get pre-filled coordinates
           location: { type: 'Point', coordinates: [80.5180, 16.5190] },
           currentLocation: { type: 'Point', coordinates: [80.5180, 16.5190] }
         });
@@ -136,6 +143,7 @@ exports.login = async (req, res) => {
           user: user._id,
           address: 'Thullur, Guntur, Andhra Pradesh',
           city: 'Thullur',
+          // Only test households get pre-filled coordinates
           location: { type: 'Point', coordinates: [80.5180, 16.5190] }
         });
       }
