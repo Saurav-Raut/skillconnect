@@ -38,8 +38,6 @@ const TrackingPage = () => {
   // Simulated Location Tracking for Workers
   useEffect(() => {
     if (userInfo?.role === 'worker' && status === 'accepted') {
-      if (!window.socket) return;
-      
       let lat = 16.5110;
       let lng = 80.5090;
       const targetLat = 16.5190;
@@ -50,6 +48,8 @@ const TrackingPage = () => {
       const lngStep = (targetLng - lng) / steps;
       
       const interval = setInterval(() => {
+        if (!window.socket) return;
+
         lat += latStep;
         lng += lngStep;
         

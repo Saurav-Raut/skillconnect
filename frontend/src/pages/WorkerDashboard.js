@@ -2,10 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchBookings, acceptBooking, verifyCheckIn, verifyCheckOut } from '../redux/bookingSlice';
 
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 const WorkerDashboard = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { bookingsList, loading, error } = useSelector((state) => state.booking);
   const { userInfo } = useSelector((state) => state.user);
 
@@ -14,7 +15,11 @@ const WorkerDashboard = () => {
   }, [dispatch]);
 
   const handleAccept = (bookingId) => {
-    dispatch(acceptBooking(bookingId));
+    dispatch(acceptBooking(bookingId)).then((action) => {
+      if (!action.error) {
+        navigate(`/track-booking?bookingId=${bookingId}`);
+      }
+    });
   };
 
   const pendingRequests = bookingsList.filter(b => b.status === 'pending');
