@@ -23,7 +23,7 @@ const WorkerCard = ({ worker }) => {
         </div>
         
         <div className="worker-card__meta">
-          {skill} · {worker.city || worker.address || 'Thullur, AP'}
+          {skill} · {worker.distanceKm != null ? `${worker.distanceKm.toFixed(1)} km away` : (worker.city || worker.address || 'Thullur, AP')}
         </div>
         
         <div className="worker-card__foot">

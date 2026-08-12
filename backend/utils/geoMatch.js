@@ -40,13 +40,7 @@ const findNearbyAvailableWorkers = async ({
   const [lng, lat] = coordinates.map((c) => parseFloat(c));
   const maxDistanceMeters = parseFloat(maxDistanceKm) * 1000;
 
-  const query = {
-    isAvailable: true
-  };
-
-  if (requireOnline) {
-    query.isOnline = true;
-  }
+  const query = {};
 
   if (skill && skill !== 'All') {
     query.skill = skill;
@@ -68,9 +62,24 @@ const findNearbyAvailableWorkers = async ({
 
   const workers = await Worker.find(query)
     .populate('user', '-password')
-    .limit(limit);
+    .limit(limit)
+    .lean();
+    
+  // Attach distanceKm to each worker
+  const workersWithDistance = workers.map(worker => {
+    let distance = 0;
+    if (worker.currentLocation && worker.currentLocation.coordinates && worker.currentLocation.coordinates.length === 2) {
+      distance = calculateDistanceKm([lng, lat], worker.currentLocation.coordinates);
+    } else if (worker.location && worker.location.coordinates && worker.location.coordinates.length === 2) {
+      distance = calculateDistanceKm([lng, lat], worker.location.coordinates);
+    }
+    return {
+      ...worker,
+      distanceKm: distance
+    };
+  });
   
-  return workers;
+  return workersWithDistance;
 };
 
 /**

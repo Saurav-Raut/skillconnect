@@ -86,7 +86,7 @@ const WorkerDashboard = () => {
                 <span className="mono" style={{ color: 'var(--text-light)', fontSize: '0.76rem' }}>Today, 4:30 PM</span>
               </div>
               <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem', margin: '8px 0 16px' }}>
-                {req.household?.user?.name || 'Household Customer'} · {(req.distanceKm || 2.1).toFixed(1)} km away
+                {req.household?.user?.name || req.householdName || 'Household Customer'} · {(req.distanceKm || 2.1).toFixed(1)} km away
               </div>
               <div style={{ display: 'flex', gap: '10px' }}>
                 <button onClick={() => handleAccept(req._id)} className="btn btn-primary btn-sm" style={{ flex: 1 }}>Accept</button>
