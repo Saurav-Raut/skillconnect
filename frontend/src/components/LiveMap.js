@@ -3,14 +3,14 @@ import { MapPin, Navigation, Info, Phone, ShieldAlert, CheckCircle, Clock } from
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
-const LiveMap = ({ workerName = 'Karthik Reddy', bookingId = 'SK8291', workerId }) => {
+const LiveMap = ({ workerName = 'Worker', bookingId, workerId, workerInitialCoords, householdCoords }) => {
   const mapRef = useRef(null);
   const mapContainerRef = useRef(null);
   const markerRef = useRef(null);
   const polylineRef = useRef(null);
 
   // Real street coordinates around Amaravati / Vijayawada / Thullur region (Household Destination)
-  const homeCoords = [16.5190, 80.5180];
+  const homeCoords = householdCoords || [16.5190, 80.5180];
   
   const [distance, setDistance] = useState('...'); // km
   const [speed, setSpeed] = useState(0); // km/h
@@ -45,7 +45,8 @@ const LiveMap = ({ workerName = 'Karthik Reddy', bookingId = 'SK8291', workerId 
 
     if (!mapRef.current) {
       mapRef.current = L.map(mapContainerRef.current, {
-        center: [16.5110, 80.5090], // initial center
+        center: homeCoords, // initial center
+
         zoom: 14,
         zoomControl: true,
         attributionControl: false
@@ -71,6 +72,32 @@ const LiveMap = ({ workerName = 'Karthik Reddy', bookingId = 'SK8291', workerId 
       L.marker(homeCoords, { icon: homeIcon })
         .addTo(mapRef.current)
         .bindPopup(`<b>Your Address</b><br/>Flat 4B, Amaravati Residency`);
+      if (workerInitialCoords) {
+        const workerIcon = L.divIcon({
+          className: 'tracking-worker-pin',
+          html: `<div style="
+            padding: 6px 14px; border-radius: 99px;
+            background: #0f172a; color: white; display: flex;
+            align-items: center; gap: 8px; font-size: 13px; font-weight: 800;
+            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.4); border: 2.5px solid #6366f1;
+            white-space: nowrap;
+          ">
+            <span style="font-size: 18px;">🛵</span>
+            <span>${workerName}</span>
+          </div>`,
+          iconSize: [160, 36],
+          iconAnchor: [80, 18]
+        });
+        markerRef.current = L.marker(workerInitialCoords, { icon: workerIcon }).addTo(mapRef.current);
+        
+        // Fit bounds to show both markers
+        const group = new L.featureGroup([L.marker(homeCoords), markerRef.current]);
+        mapRef.current.fitBounds(group.getBounds(), { padding: [50, 50] });
+
+        const initialDist = calculateDistanceKm(workerInitialCoords[0], workerInitialCoords[1], homeCoords[0], homeCoords[1]);
+        setDistance(initialDist.toFixed(1));
+        setEta(Math.max(1, Math.ceil(initialDist * 2.5)));
+      }
     }
 
     return () => {

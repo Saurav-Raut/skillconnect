@@ -18,7 +18,18 @@ const TrackingPage = () => {
   const { bookingsList, loading } = useSelector((state) => state.booking);
   
   const booking = bookingsList.find(b => b._id === bookingId);
-  const workerName = booking?.worker?.user?.name || searchParams.get('workerName') || 'Karthik Reddy';
+  const workerUser = booking?.worker?.user;
+  const workerName = workerUser?.name || searchParams.get('workerName') || 'Worker';
+  
+  const workerCoords = booking?.worker?.currentLocation?.coordinates?.length === 2 
+    ? [booking.worker.currentLocation.coordinates[1], booking.worker.currentLocation.coordinates[0]] // [lat, lng]
+    : (booking?.worker?.location?.coordinates?.length === 2 
+      ? [booking.worker.location.coordinates[1], booking.worker.location.coordinates[0]] 
+      : [16.5110, 80.5090]);
+
+  const householdCoords = booking?.householdLocation?.coordinates?.length === 2 
+    ? [booking.householdLocation.coordinates[1], booking.householdLocation.coordinates[0]]
+    : [16.5190, 80.5180];
   
   const [showFaceScanner, setShowFaceScanner] = useState(false);
   const [scanType, setScanType] = useState(''); // 'checkin' or 'checkout'
@@ -291,7 +302,13 @@ const TrackingPage = () => {
             )}
           </div>
         ) : (
-          <LiveMap workerName={workerName} bookingId={bookingId} workerId={workerId} />
+          <LiveMap 
+            workerName={workerName} 
+            bookingId={bookingId} 
+            workerId={workerUser?._id || workerId}
+            workerInitialCoords={workerCoords}
+            householdCoords={householdCoords}
+          />
         )}
       </div>
 
