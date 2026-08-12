@@ -19,17 +19,37 @@ cleanExpiredFaceData();
 // Run every hour to keep database clean
 setInterval(cleanExpiredFaceData, 60 * 60 * 1000);
 
+// Allowed Origins Array
+const allowedOrigins = [
+  process.env.FRONTEND_URL,          // Deployed Vercel URL
+  'http://localhost:3000',           // Local Web
+  'http://localhost:19000',          // Local Mobile
+  'http://localhost:19006',          // Local Mobile Web
+  'http://localhost:8081'            // Expo Go default
+].filter(Boolean); // Remove undefined values
+
+// CORS Options
+const corsOptions = {
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin) || origin.includes('vercel.app')) {
+      callback(null, true);
+    } else {
+      console.warn('Blocked by CORS:', origin);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
+};
+
 const app = express();
 const server = http.createServer(app);
 const io = socketio(server, {
-  cors: {
-    origin: '*',
-    methods: ['GET', 'POST', 'PUT', 'DELETE']
-  }
+  cors: corsOptions
 });
 
 // Middlewares
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // Serve static uploads
