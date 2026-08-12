@@ -134,7 +134,8 @@ const Chatbot = () => {
       const res = await API.post('/chatbot/message', {
         text,
         role: userInfo ? userInfo.role : 'guest',
-        sessionId
+        sessionId,
+        uiLanguage: language
       });
 
       const { replyText, routeButton, escalated } = res.data.data;

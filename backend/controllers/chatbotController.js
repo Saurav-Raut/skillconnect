@@ -15,12 +15,12 @@ exports.handleMessage = async (req, res) => {
     const userDoc = req.user || null;
     const userRole = role || (userDoc ? userDoc.role : 'guest');
 
-    // Process message through chatbot matching engine
     const engineResult = await processChatbotMessage({
       text,
       userDoc,
       userRole,
-      sessionId
+      sessionId,
+      uiLanguage: req.body.uiLanguage
     });
 
     // Save to conversation audit log

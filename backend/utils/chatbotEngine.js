@@ -291,8 +291,8 @@ const fetchLiveData = async (intent, userDoc, userRole) => {
 /**
  * Main engine controller to compile chatbot response
  */
-const processChatbotMessage = async ({ text, userDoc, userRole, sessionId }) => {
-  const language = detectLanguage(text);
+const processChatbotMessage = async ({ text, userDoc, userRole, sessionId, uiLanguage }) => {
+  const language = uiLanguage || detectLanguage(text);
   const cleanInput = cleanText(text);
 
   // 1. Detect Intent
@@ -435,6 +435,18 @@ User Query: "${text}"`;
         replyText = matchedChunkText;
       } else {
         replyText = `नमस्ते! मैं स्किलकनेक्ट का एआई सहायक हूँ। मैं सुरक्षा नीतियों, भुगतान और बुकिंग में आपकी सहायता कर सकता हूँ। क्या आप मुझे बता सकते हैं कि आपको किस प्रकार की सहायता चाहिए?\n\nतुरंत सहायता के लिए, कृपया कस्टमर केयर को +1-800-555-0199 पर कॉल करें या customercare@skillconnect.com पर ईमेल करें। एक प्रतिनिधि 5 मिनट के भीतर आपसे संपर्क करेगा। असुविधा के लिए खेद है!`;
+      }
+    } else if (language === 'ta') {
+      if (matchedChunkText) {
+        replyText = matchedChunkText;
+      } else {
+        replyText = `வணக்கம்! நான் உங்கள் SkillConnect உதவி முகவர். பாதுகாப்பு, பணம் செலுத்துதல் அல்லது முன்பதிவு குறித்து என்னால் உதவ முடியும். உடனடியாக வாடிக்கையாளர் சேவையை தொடர்பு கொள்ள +1-800-555-0199 ஐ அழைக்கவும் அல்லது customercare@skillconnect.com க்கு மின்னஞ்சல் செய்யவும். ஒரு பிரதிநிதி 5 நிமிடங்களுக்குள் உங்களை தொடர்புகொள்வார்.`;
+      }
+    } else if (language === 'te') {
+      if (matchedChunkText) {
+        replyText = matchedChunkText;
+      } else {
+        replyText = `నమస్కారం! నేను మీ SkillConnect సహాయక ప్రతినిధిని. భద్రత, చెల్లింపులు లేదా బుకింగ్ గురించి నేను సహాయం చేయగలను. తక్షణ సహాయం కోసం కస్టమర్ కేర్‌ను +1-800-555-0199 కి కాల్ చేయండి లేదా customercare@skillconnect.com కి ఇమెయిల్ చేయండి. 5 నిమిషాల్లో ఒక ప్రతినిధి మిమ్మల్ని సంప్రదిస్తారు.`;
       }
     } else {
       // English Responses
