@@ -53,43 +53,33 @@ const TrackingPage = () => {
 
   const status = demoStatus || booking?.status || 'pending';
 
-  // Simulated Location Tracking for Workers
+  // Real Location Tracking for Workers
   useEffect(() => {
     if (userInfo?.role === 'worker' && status === 'accepted') {
-      let lat = 16.5110;
-      let lng = 80.5090;
-      const targetLat = 16.5190;
-      const targetLng = 80.5180;
-      
-      const steps = 60; // take 60 updates to reach destination (approx 3 minutes at 3s per update)
-      const latStep = (targetLat - lat) / steps;
-      const lngStep = (targetLng - lng) / steps;
-      
-      const interval = setInterval(() => {
-        if (!window.socket) return;
+      if (!navigator.geolocation) {
+        console.warn("Geolocation is not supported by this browser.");
+        return;
+      }
 
-        lat += latStep;
-        lng += lngStep;
-        
-        // Don't overshoot
-        if ((latStep > 0 && lat > targetLat) || (latStep < 0 && lat < targetLat)) lat = targetLat;
-        if ((lngStep > 0 && lng > targetLng) || (lngStep < 0 && lng < targetLng)) lng = targetLng;
-        
-        window.socket.emit('updateLocation', {
-          workerId: userInfo._id,
-          bookingId,
-          coordinates: [lng, lat], // socket expects [lng, lat]
-          role: 'worker'
-        });
-        
-        if (lat === targetLat && lng === targetLng) {
-          clearInterval(interval);
-        }
-      }, 3000);
+      const watchId = navigator.geolocation.watchPosition(
+        (position) => {
+          if (!window.socket) return;
+          const { latitude, longitude } = position.coords;
+          
+          window.socket.emit('updateLocation', {
+            workerId: userInfo._id,
+            bookingId: activeBookingId,
+            coordinates: [longitude, latitude], // MongoDB format: [lng, lat]
+            role: 'worker'
+          });
+        },
+        (error) => console.error("GPS Tracking Error:", error.message),
+        { enableHighAccuracy: true, maximumAge: 10000, timeout: 10000 }
+      );
       
-      return () => clearInterval(interval);
+      return () => navigator.geolocation.clearWatch(watchId);
     }
-  }, [userInfo, status, bookingId]);
+  }, [userInfo, status, activeBookingId]);
 
   const handleFaceScan = (faceData) => {
     if (scanType === 'checkin') {
