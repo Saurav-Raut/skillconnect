@@ -33,7 +33,7 @@ const TrackingPage = () => {
     dispatch(fetchBookings());
   }, [dispatch]);
 
-  const status = demoStatus || booking?.status || 'accepted';
+  const status = demoStatus || booking?.status || 'pending';
 
   const handleFaceScan = (faceData) => {
     if (scanType === 'checkin') {
@@ -62,18 +62,26 @@ const TrackingPage = () => {
   };
 
   const handleInstantCheckIn = () => {
-    dispatch(verifyCheckIn({ bookingId, faceData: 'demo-match-token' })).then(() => {
-      alert('Worker checked in successfully (Demo verification)!');
-      setDemoStatus('in_progress');
-      dispatch(fetchBookings());
+    dispatch(verifyCheckIn({ bookingId, faceData: 'demo-match-token' })).then((action) => {
+      if (!action.error) {
+        alert('Worker checked in successfully (Demo verification)!');
+        setDemoStatus('in_progress');
+        dispatch(fetchBookings());
+      } else {
+        alert('Demo check-in failed: ' + (action.payload || 'Unknown error'));
+      }
     });
   };
 
   const handleInstantCheckOut = () => {
-    dispatch(verifyCheckOut({ bookingId, faceData: 'demo-match-token' })).then(() => {
-      alert('Worker checkout verified! Escrow funds released (Demo verification).');
-      setDemoStatus('completed');
-      dispatch(fetchBookings());
+    dispatch(verifyCheckOut({ bookingId, faceData: 'demo-match-token' })).then((action) => {
+      if (!action.error) {
+        alert('Worker checkout verified! Escrow funds released (Demo verification).');
+        setDemoStatus('completed');
+        dispatch(fetchBookings());
+      } else {
+        alert('Demo check-out failed: ' + (action.payload || 'Unknown error'));
+      }
     });
   };
 

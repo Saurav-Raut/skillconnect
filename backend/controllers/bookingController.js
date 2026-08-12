@@ -191,6 +191,10 @@ exports.checkInBooking = async (req, res) => {
       return res.status(404).json({ success: false, error: 'Booking not found' });
     }
 
+    if (!['accepted', 'escrow_funded'].includes(booking.status)) {
+      return res.status(400).json({ success: false, error: 'Worker must accept the job before check-in is allowed' });
+    }
+
     // Verify face encoding
     const verification = verifyFaceMatch(booking.worker.faceEncodingEncrypted, faceData);
     if (!verification.success) {
@@ -247,6 +251,10 @@ exports.checkOutBooking = async (req, res) => {
 
     if (!booking) {
       return res.status(404).json({ success: false, error: 'Booking not found' });
+    }
+
+    if (booking.status !== 'in_progress') {
+      return res.status(400).json({ success: false, error: 'Job must be in progress before checkout is allowed' });
     }
 
     // Verify face encoding
