@@ -2,7 +2,8 @@ const Worker = require('../models/Worker');
 const User = require('../models/User');
 const { generateFaceDescriptor, encryptFaceEncoding } = require('../utils/faceVerify');
 const { getFaceDataExpiryDate } = require('../utils/faceDataPolicy');
-const { findNearbyAvailableWorkers, calculateDistanceKm } = require('../utils/geoMatch');
+const { findNearbyAvailableWorkers } = require('../utils/geoMatch');
+const { calculateDistanceKm } = require('../utils/distance');
 
 // @desc    Get all workers (with filters for skill, availability, and location radius)
 // @route   GET /api/workers
@@ -37,7 +38,7 @@ exports.getWorkers = async (req, res) => {
     if (lng && lat) {
       const searchCoords = [parseFloat(lng), parseFloat(lat)];
       results = workers.map(worker => {
-        let distance = 0;
+        let distance = null;
         if (worker.currentLocation && worker.currentLocation.coordinates && worker.currentLocation.coordinates.length === 2) {
           distance = calculateDistanceKm(searchCoords, worker.currentLocation.coordinates);
         } else if (worker.location && worker.location.coordinates && worker.location.coordinates.length === 2) {

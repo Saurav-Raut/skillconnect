@@ -34,16 +34,7 @@ const WorkerDashboard = () => {
   
   const rating = userInfo?.workerProfile?.ratingAvg || 5.0;
 
-  // Toggle online status when viewing dashboard
-  useEffect(() => {
-    if (userInfo?._id && window.socket) {
-      window.socket.emit('workerOnlineToggle', { workerId: userInfo._id, isOnline: true });
-      
-      return () => {
-        window.socket.emit('workerOnlineToggle', { workerId: userInfo._id, isOnline: false });
-      };
-    }
-  }, [userInfo]);
+
 
   return (
     <div className="fade-in">

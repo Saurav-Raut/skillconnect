@@ -28,20 +28,23 @@ const SearchPage = () => {
   const [liveMapWorker, setLiveMapWorker] = useState(null);
 
   const startLiveMatchBroadcast = () => {
-    const newBid = '64010a1b2c3d4e5f60718293';
-    setActiveLiveMatchBookingId(newBid);
     setIsLiveMatchOpen(true);
+
 
     if (window.socket) {
       window.socket.emit('startLiveMatchMatch', {
-        bookingId: newBid,
+        userId: userInfo?._id,
         skill: skill && skill !== 'All' ? skill : 'Electrician',
-        coordinates: [80.5180, 16.5190],
+        coordinates: coordinates || [80.5180, 16.5190],
         addressText: locationStr || 'Thullur, Amaravati, AP',
         radiusKm: 5,
         householdName: userInfo?.name || 'Household Customer',
         ratePerHour: 150,
         totalAmount: 300
+      }, (response) => {
+        if (response && response.bookingId) {
+          setActiveLiveMatchBookingId(response.bookingId);
+        }
       });
     }
   };

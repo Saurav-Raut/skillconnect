@@ -9,6 +9,18 @@ const WorkerCard = ({ worker }) => {
   // Generate random animated cartoon profile pic without checkered background
   const photoUrl = getWorkerAvatar(worker);
 
+  const isLive = worker.lastLocationUpdate && (Date.now() - new Date(worker.lastLocationUpdate).getTime() < 60000); // 60s for demo
+  
+  const timeAgo = (dateStr) => {
+    if (!dateStr) return '';
+    const diff = Math.floor((Date.now() - new Date(dateStr).getTime()) / 60000);
+    if (diff < 1) return 'Just now';
+    if (diff < 60) return `${diff}m ago`;
+    const hours = Math.floor(diff / 60);
+    if (hours < 24) return `${hours}h ago`;
+    return `${Math.floor(hours / 24)}d ago`;
+  };
+
   return (
     <div className="worker-card">
       <div className="worker-card__photo" style={{ backgroundImage: `url(${photoUrl})`, backgroundPosition: 'center', backgroundSize: 'cover' }}>
@@ -22,8 +34,18 @@ const WorkerCard = ({ worker }) => {
           )}
         </div>
         
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '6px' }}>
+          {worker.lastLocationUpdate ? (
+            isLive ? (
+              <span className="badge-live"><span className="live-dot"></span> Live</span>
+            ) : (
+              <span className="badge-stale" title={`Updated ${timeAgo(worker.lastLocationUpdate)}`}>Last known</span>
+            )
+          ) : null}
+        </div>
+
         <div className="worker-card__meta">
-          {skill} · {worker.distanceKm != null ? `${worker.distanceKm.toFixed(1)} km away` : (worker.city || worker.address || 'Thullur, AP')}
+          {skill} · {worker.distanceKm != null ? `${worker.distanceKm.toFixed(1)} km away` : (worker.city || worker.address || 'Registered Location')}
         </div>
         
         <div className="worker-card__foot">
@@ -84,6 +106,40 @@ const WorkerCard = ({ worker }) => {
         .stars {
           color: var(--warning);
           font-size: 0.8rem;
+        }
+        .badge-live {
+          font-size: 0.65rem;
+          font-weight: 700;
+          padding: 2px 6px;
+          border-radius: 999px;
+          background: rgba(16, 185, 129, 0.15);
+          color: #10b981;
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+        .live-dot {
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          background: #10b981;
+          animation: pulse 2s infinite;
+        }
+        .badge-stale {
+          font-size: 0.65rem;
+          font-weight: 600;
+          padding: 2px 6px;
+          border-radius: 999px;
+          background: rgba(255, 255, 255, 0.05);
+          color: var(--text-muted);
+          display: inline-flex;
+          border: 1px solid var(--line);
+        }
+        @keyframes pulse {
+          0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+          70% { box-shadow: 0 0 0 4px rgba(16, 185, 129, 0); }
+          100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
         }
       `}</style>
     </div>

@@ -352,7 +352,7 @@ exports.createLiveMatchBooking = async (req, res) => {
       broadcastRound: 1,
       householdLocation: {
         type: 'Point',
-        coordinates: coordinates && coordinates.length === 2 ? coordinates : [80.5180, 16.5190]
+        coordinates: coordinates && coordinates.length === 2 ? coordinates : undefined
       },
       householdAddressText: addressText || 'Thullur, Amaravati, AP',
       date: date || new Date(),

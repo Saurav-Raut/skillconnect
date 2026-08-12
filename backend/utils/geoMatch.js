@@ -1,26 +1,5 @@
 const Worker = require('../models/Worker');
-
-/**
- * Haversine formula to calculate distance in kilometers between two [lng, lat] coordinates
- */
-const calculateDistanceKm = (coords1, coords2) => {
-  if (!coords1 || !coords2 || coords1.length !== 2 || coords2.length !== 2) {
-    return 0;
-  }
-  const [lng1, lat1] = coords1;
-  const [lng2, lat2] = coords2;
-
-  const toRad = (value) => (value * Math.PI) / 180;
-  const R = 6371; // Earth radius in kilometers
-
-  const dLat = toRad(lat2 - lat1);
-  const dLng = toRad(lng2 - lng1);
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return parseFloat((R * c).toFixed(2));
-};
+const { calculateDistanceKm } = require('./distance');
 
 /**
  * Geographically query MongoDB for available workers matching skill within radius
@@ -67,7 +46,7 @@ const findNearbyAvailableWorkers = async ({
     
   // Attach distanceKm to each worker
   const workersWithDistance = workers.map(worker => {
-    let distance = 0;
+    let distance = null;
     if (worker.currentLocation && worker.currentLocation.coordinates && worker.currentLocation.coordinates.length === 2) {
       distance = calculateDistanceKm([lng, lat], worker.currentLocation.coordinates);
     } else if (worker.location && worker.location.coordinates && worker.location.coordinates.length === 2) {
@@ -95,7 +74,6 @@ const selectNextRoundWorkers = (allNearbyWorkers, excludedWorkerIds = [], count 
 };
 
 module.exports = {
-  calculateDistanceKm,
   findNearbyAvailableWorkers,
   selectNextRoundWorkers
 };

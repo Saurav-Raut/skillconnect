@@ -39,8 +39,7 @@ const BookingSchema = new mongoose.Schema({
       default: 'Point'
     },
     coordinates: {
-      type: [Number],
-      default: [80.5180, 16.5190]
+      type: [Number]
     }
   },
   householdAddressText: {
