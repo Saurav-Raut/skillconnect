@@ -6,7 +6,7 @@ import WorkerMapView from '../components/WorkerMapView';
 import { SKILL_CATEGORIES } from '../utils/constants';
 import { Map, Grid, Filter, RotateCcw } from 'lucide-react';
 import IndiaLocationAutocomplete from '../components/IndiaLocationAutocomplete';
-import RapidoMatchingModal from '../components/RapidoMatchingModal';
+import LiveMatchMatchingModal from '../components/LiveMatchMatchingModal';
 import LiveMap from '../components/LiveMap';
 
 const SearchPage = () => {
@@ -17,22 +17,23 @@ const SearchPage = () => {
   const [skill, setSkill] = useState('');
   const [rating, setRating] = useState('4+');
   const [locationStr, setLocationStr] = useState('');
+  const [coordinates, setCoordinates] = useState([80.5180, 16.5190]); // Default to Thullur
   const [viewMode, setViewMode] = useState('list'); // 'list' | 'map'
 
-  // Rapido live matching state
-  const [isRapidoOpen, setIsRapidoOpen] = useState(false);
-  const [activeRapidoBookingId, setActiveRapidoBookingId] = useState('');
+  // LiveMatch live matching state
+  const [isLiveMatchOpen, setIsLiveMatchOpen] = useState(false);
+  const [activeLiveMatchBookingId, setActiveLiveMatchBookingId] = useState('');
   const [showLiveMap, setShowLiveMap] = useState(false);
   const [liveMapBookingId, setLiveMapBookingId] = useState(null);
   const [liveMapWorker, setLiveMapWorker] = useState(null);
 
-  const startRapidoBroadcast = () => {
+  const startLiveMatchBroadcast = () => {
     const newBid = '64010a1b2c3d4e5f60718293';
-    setActiveRapidoBookingId(newBid);
-    setIsRapidoOpen(true);
+    setActiveLiveMatchBookingId(newBid);
+    setIsLiveMatchOpen(true);
 
     if (window.socket) {
-      window.socket.emit('startRapidoMatch', {
+      window.socket.emit('startLiveMatchMatch', {
         bookingId: newBid,
         skill: skill && skill !== 'All' ? skill : 'Electrician',
         coordinates: [80.5180, 16.5190],
@@ -48,6 +49,10 @@ const SearchPage = () => {
   const handleSearch = () => {
     const filters = {};
     if (skill && skill !== 'All') filters.skill = skill;
+    if (coordinates) {
+      filters.lng = coordinates[0];
+      filters.lat = coordinates[1];
+    }
     dispatch(fetchWorkers(filters));
   };
 
@@ -55,16 +60,7 @@ const SearchPage = () => {
     handleSearch();
   }, [dispatch]);
 
-  const fallbackWorkers = [
-    { _id: '1', user: { name: 'Ravi Kumar' }, skill: 'Electrician', ratePerHour: 100, ratingAvg: 4.8, city: 'Thullur, AP', idVerificationStatus: 'approved' },
-    { _id: '2', user: { name: 'Suresh Naidu' }, skill: 'Plumber', ratePerHour: 93.75, ratingAvg: 4.9, city: 'Vijayawada', idVerificationStatus: 'approved' },
-    { _id: '3', user: { name: 'Lakshmi Devi' }, skill: 'Cleaner', ratePerHour: 62.5, ratingAvg: 4.7, city: 'Guntur', idVerificationStatus: 'approved' },
-    { _id: '4', user: { name: 'Anitha K.' }, skill: 'Cook', ratePerHour: 75, ratingAvg: 4.6, city: 'Thullur', idVerificationStatus: 'approved' },
-    { _id: '5', user: { name: 'Mohan Rao' }, skill: 'Carpenter', ratePerHour: 112.5, ratingAvg: 4.9, city: 'Vijayawada', idVerificationStatus: 'approved' },
-    { _id: '6', user: { name: 'Ganesh P.' }, skill: 'Daily labour', ratePerHour: 56.25, ratingAvg: 4.5, city: 'Guntur', idVerificationStatus: 'approved' }
-  ];
-
-  const displayWorkers = workersList.length > 0 ? workersList : fallbackWorkers;
+  const displayWorkers = workersList;
 
   return (
     <div className="fade-in search-layout" style={{
@@ -94,7 +90,10 @@ const SearchPage = () => {
             <IndiaLocationAutocomplete
               value={locationStr}
               onChange={(text) => setLocationStr(text)}
-              onSelectLocation={(loc) => setLocationStr(loc.city)}
+              onSelectLocation={(loc) => { 
+                setLocationStr(loc.city);
+                if (loc.coordinates) setCoordinates(loc.coordinates);
+              }}
               placeholder="Type 2-3 letters of any Indian city..."
               label="Locality / City (All-India)"
             />
@@ -141,9 +140,9 @@ const SearchPage = () => {
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-            {/* Rapido Instant Broadcast Button */}
+            {/* LiveMatch Instant Broadcast Button */}
             <button
-              onClick={startRapidoBroadcast}
+              onClick={startLiveMatchBroadcast}
               style={{
                 padding: '9px 18px',
                 borderRadius: '999px',
@@ -159,7 +158,7 @@ const SearchPage = () => {
                 boxShadow: '0 4px 14px rgba(245, 158, 11, 0.4)'
               }}
             >
-              ⚡ Rapido Live Match
+              ⚡ LiveMatch Live Match
             </button>
 
             {/* Map vs List View Mode Toggle */}
@@ -222,6 +221,14 @@ const SearchPage = () => {
 
         {loading ? (
           <div style={{ padding: '3rem', textAlign: 'center' }}>Searching workers...</div>
+        ) : displayWorkers.length === 0 ? (
+          <div style={{ padding: '4rem 2rem', textAlign: 'center', background: 'var(--bg-card)', borderRadius: '16px', border: '1px solid var(--line)' }}>
+            <h3 style={{ fontSize: '1.25rem', marginBottom: '8px' }}>No verified workers online near you right now</h3>
+            <p style={{ color: 'var(--text-muted)', marginBottom: '20px' }}>Try widening your search radius or changing the required skill category.</p>
+            <button onClick={() => { setSkill('All'); setLocationStr(''); handleSearch(); }} className="btn btn-primary" style={{ padding: '10px 24px' }}>
+              Widen Search
+            </button>
+          </div>
         ) : viewMode === 'map' ? (
           <WorkerMapView workers={displayWorkers} />
         ) : (
@@ -245,16 +252,16 @@ const SearchPage = () => {
       `}</style>
 
       {/* RAPIDO MATCHING MODAL */}
-      <RapidoMatchingModal
-        isOpen={isRapidoOpen}
-        onClose={() => setIsRapidoOpen(false)}
-        bookingId={activeRapidoBookingId}
+      <LiveMatchMatchingModal
+        isOpen={isLiveMatchOpen}
+        onClose={() => setIsLiveMatchOpen(false)}
+        bookingId={activeLiveMatchBookingId}
         skillRequested={skill && skill !== 'All' ? skill : 'Electrician'}
         radiusKm={5}
         socket={window.socket}
         userInfo={userInfo}
         onOpenLiveMap={(bid, wkr) => {
-          setLiveMapBookingId(bid || activeRapidoBookingId);
+          setLiveMapBookingId(bid || activeLiveMatchBookingId);
           setLiveMapWorker(wkr);
           setShowLiveMap(true);
         }}
@@ -262,7 +269,7 @@ const SearchPage = () => {
 
       {showLiveMap && (
         <LiveMap
-          bookingId={liveMapBookingId || activeRapidoBookingId}
+          bookingId={liveMapBookingId || activeLiveMatchBookingId}
           onClose={() => setShowLiveMap(false)}
           workerName={liveMapWorker?.user?.name || 'Karthik Reddy'}
           workerPhone={liveMapWorker?.user?.phone || '+91 98765 43210'}

@@ -2,6 +2,7 @@ const Worker = require('../models/Worker');
 const User = require('../models/User');
 const { generateFaceDescriptor, encryptFaceEncoding } = require('../utils/faceVerify');
 const { getFaceDataExpiryDate } = require('../utils/faceDataPolicy');
+const { findNearbyAvailableWorkers } = require('../utils/geoMatch');
 
 // @desc    Get all workers (with filters for skill, availability, and location radius)
 // @route   GET /api/workers
@@ -33,6 +34,33 @@ exports.getWorkers = async (req, res) => {
     }
 
     const workers = await Worker.find(query).populate('user', '-password');
+    res.status(200).json({ success: true, count: workers.length, data: workers });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+// @desc    Get nearby online workers
+// @route   GET /api/workers/nearby
+// @access  Public
+exports.getNearbyWorkers = async (req, res) => {
+  try {
+    const { skill, lng, lat, maxDistance } = req.query;
+    
+    if (!lng || !lat) {
+      return res.status(400).json({ success: false, error: 'Longitude and latitude are required' });
+    }
+
+    const workers = await findNearbyAvailableWorkers({
+      skill,
+      coordinates: [lng, lat],
+      maxDistanceKm: maxDistance ? parseFloat(maxDistance) / 1000 : 10,
+      limit: 50
+    });
+
+    // Sort by highest rating first
+    workers.sort((a, b) => (b.ratingAvg || 0) - (a.ratingAvg || 0));
+
     res.status(200).json({ success: true, count: workers.length, data: workers });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });

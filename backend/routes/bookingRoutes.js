@@ -1,7 +1,7 @@
 const express = require('express');
 const {
   createBooking,
-  createRapidoBooking,
+  createLiveMatchBooking,
   getBookings,
   getBookingChat,
   getBookingCallInfo,
@@ -18,7 +18,7 @@ const router = express.Router();
 router.use(protect);
 
 router.post('/', createBooking);
-router.post('/rapido-match', createRapidoBooking);
+router.post('/live-match', createLiveMatchBooking);
 router.get('/', getBookings);
 router.get('/:id/chat', getBookingChat);
 router.get('/:id/call', getBookingCallInfo);

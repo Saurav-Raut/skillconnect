@@ -22,8 +22,9 @@ import {
 } from '@skillconnect/shared';
 import { AppDispatch, RootState } from '../redux/store';
 import { CustomButton } from '../components/CustomButton';
-import { RapidoIncomingModal } from '../components/RapidoIncomingModal';
+import { LiveMatchIncomingModal } from '../components/LiveMatchIncomingModal';
 import { Colors, Spacing, Radius, Typography } from '../theme/colors';
+import { socket } from '../api/socket';
 
 // Try importing react-native-maps safely
 let MapView: any = null;
@@ -80,8 +81,41 @@ export const MapScreen = ({ navigation }: any) => {
 
   const [selectedSkill, setSelectedSkill] = useState<string>('Electrician');
   const [selectedWorker, setSelectedWorker] = useState<any | null>(null);
-  const [isOnline, setIsOnline] = useState(true);
+  const [isOnline, setIsOnline] = useState(false);
   const [useGoogleMaps, setUseGoogleMaps] = useState(false);
+
+  useEffect(() => {
+    if (isWorker && isOnline) {
+      let watchId: number;
+      if (navigator.geolocation) {
+         watchId = navigator.geolocation.watchPosition(
+           (position) => {
+             const { latitude, longitude } = position.coords;
+             socket.emit('updateLocation', {
+               workerId: userInfo?._id,
+               coordinates: [longitude, latitude],
+               role: 'worker'
+             });
+           },
+           (error) => console.log('Location Error:', error),
+           { enableHighAccuracy: true, distanceFilter: 10, timeout: 5000, maximumAge: 0 }
+         );
+      }
+      return () => {
+        if (navigator.geolocation && watchId !== undefined) {
+          navigator.geolocation.clearWatch(watchId);
+        }
+      };
+    }
+  }, [isWorker, isOnline, userInfo]);
+
+  const toggleOnlineStatus = () => {
+    const newStatus = !isOnline;
+    setIsOnline(newStatus);
+    if (userInfo?._id) {
+      socket.emit('workerOnlineToggle', { workerId: userInfo._id, isOnline: newStatus });
+    }
+  };
 
   // Incoming Job Modal state for Workers
   const [incomingModalVisible, setIncomingModalVisible] = useState(false);
@@ -113,7 +147,7 @@ export const MapScreen = ({ navigation }: any) => {
         locationCoords: [72.88, 19.08]
       };
       const res: any = await dispatch(createBooking(payload)).unwrap();
-      Alert.alert('Rapido Match Confirmed', `Booking sent to ${worker.name}. Redirecting to live tracking...`, [
+      Alert.alert('Live Match Confirmed', `Booking sent to ${worker.name}. Redirecting to live tracking...`, [
         {
           text: 'Open Live Tracking',
           onPress: () => navigation.navigate('Tracking', { bookingId: res.data?._id || 'booking_demo_123' })
@@ -161,7 +195,7 @@ export const MapScreen = ({ navigation }: any) => {
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>
-          {isWorker ? 'Worker Rapido Radar' : 'Find Nearby Workers'}
+          {isWorker ? 'Worker LiveMatch Radar' : 'Find Nearby Workers'}
         </Text>
         <View style={styles.headerRight}>
           <TouchableOpacity
@@ -175,7 +209,7 @@ export const MapScreen = ({ navigation }: any) => {
           {isWorker ? (
             <TouchableOpacity
               style={[styles.statusToggle, isOnline ? styles.toggleOnline : styles.toggleOffline]}
-              onPress={() => setIsOnline(!isOnline)}
+              onPress={toggleOnlineStatus}
             >
               <Text style={styles.toggleText}>{isOnline ? '● ONLINE' : '○ OFFLINE'}</Text>
             </TouchableOpacity>
@@ -271,7 +305,7 @@ export const MapScreen = ({ navigation }: any) => {
                 </Text>
                 <Text style={styles.workerStatusSub}>
                   {isOnline
-                    ? 'Listening for nearby Rapido match requests via Socket.io.'
+                    ? 'Listening for nearby LiveMatch match requests via Socket.io.'
                     : 'Toggle ONLINE above to receive incoming bookings.'}
                 </Text>
                 {isOnline ? (
@@ -306,7 +340,7 @@ export const MapScreen = ({ navigation }: any) => {
             </View>
 
             <CustomButton
-              title="⚡ Book via Rapido Instant Match"
+              title="⚡ Book via LiveMatch Instant Match"
               onPress={() => handleBookWorker(selectedWorker)}
               style={{ width: '100%' }}
             />
@@ -314,7 +348,7 @@ export const MapScreen = ({ navigation }: any) => {
         ) : null}
       </View>
 
-      <RapidoIncomingModal
+      <LiveMatchIncomingModal
         visible={incomingModalVisible}
         job={incomingJob}
         onAccept={handleAcceptJob}

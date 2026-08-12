@@ -4,7 +4,8 @@ import API from '../api/client';
 export const fetchWorkers = createAsyncThunk('worker/fetchAll', async (filters, { rejectWithValue }) => {
   try {
     const params = new URLSearchParams(filters).toString();
-    const res = await API.get(`/workers?${params}`);
+    const endpoint = (filters.lng && filters.lat) ? '/workers/nearby' : '/workers';
+    const res = await API.get(`${endpoint}?${params}`);
     return res.data;
   } catch (error) {
     return rejectWithValue(error.response?.data?.error || 'Failed to fetch workers');

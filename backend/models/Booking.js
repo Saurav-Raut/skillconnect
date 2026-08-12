@@ -17,7 +17,7 @@ const BookingSchema = new mongoose.Schema({
   },
   matchingMode: {
     type: String,
-    enum: ['direct', 'rapido_broadcast'],
+    enum: ['direct', 'live_match_broadcast'],
     default: 'direct'
   },
   radiusKm: {

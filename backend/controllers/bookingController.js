@@ -309,9 +309,9 @@ exports.disputeBooking = async (req, res) => {
 };
 
 // @desc    Create a Rapido-style live broadcast booking in 'searching' state
-// @route   POST /api/bookings/rapido-match
+// @route   POST /api/bookings/live-match
 // @access  Private (Household only)
-exports.createRapidoBooking = async (req, res) => {
+exports.createLiveMatchBooking = async (req, res) => {
   try {
     const { skill, date, startTime, hours, ratePerHour, coordinates, addressText, radiusKm } = req.body;
 
@@ -339,7 +339,7 @@ exports.createRapidoBooking = async (req, res) => {
     const booking = await Booking.create({
       household: household._id,
       skillRequested: skill,
-      matchingMode: 'rapido_broadcast',
+      matchingMode: 'live_match_broadcast',
       radiusKm: parseFloat(radiusKm) || 5,
       broadcastRound: 1,
       householdLocation: {

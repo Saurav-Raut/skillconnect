@@ -23,6 +23,7 @@ const WorkerSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
+  // location: Static, registered service area or primary address provided at sign-up.
   location: {
     type: {
       type: String,
@@ -34,6 +35,7 @@ const WorkerSchema = new mongoose.Schema({
       default: [80.5180, 16.5190] // Thullur AP default
     }
   },
+  // currentLocation: Live, real-time GPS position streamed via sockets when online/active.
   currentLocation: {
     type: {
       type: String,
@@ -45,6 +47,12 @@ const WorkerSchema = new mongoose.Schema({
       default: [80.5180, 16.5190] // Real-time GPS coordinates
     }
   },
+  // isOnline: Controls general discoverability for new matches. Must be true to appear in Grid/Map/LiveMatch.
+  isOnline: {
+    type: Boolean,
+    default: false
+  },
+  // isAvailable: Determines if the worker can accept a new job right now (false if already booked).
   isAvailable: {
     type: Boolean,
     default: true

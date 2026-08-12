@@ -25,12 +25,12 @@ const calculateDistanceKm = (coords1, coords2) => {
 /**
  * Geographically query MongoDB for available workers matching skill within radius
  */
-const findNearbyWorkers = async ({
+const findNearbyAvailableWorkers = async ({
   skill,
   coordinates,
   maxDistanceKm = 5,
   excludedWorkerIds = [],
-  limit = 15
+  limit = 50
 }) => {
   if (!coordinates || coordinates.length !== 2) {
     throw new Error('Valid [longitude, latitude] coordinates are required for geoMatch');
@@ -40,7 +40,8 @@ const findNearbyWorkers = async ({
   const maxDistanceMeters = parseFloat(maxDistanceKm) * 1000;
 
   const query = {
-    isAvailable: true
+    isAvailable: true,
+    isOnline: true
   };
 
   if (skill && skill !== 'All') {
@@ -51,7 +52,6 @@ const findNearbyWorkers = async ({
     query._id = { $nin: excludedWorkerIds };
   }
 
-  // Prefer currentLocation 2dsphere index query
   query.currentLocation = {
     $near: {
       $geometry: {
@@ -62,28 +62,11 @@ const findNearbyWorkers = async ({
     }
   };
 
-  try {
-    const workers = await Worker.find(query)
-      .populate('user', '-password')
-      .limit(limit);
-    return workers;
-  } catch (err) {
-    // Fallback to location index if currentLocation query fails
-    delete query.currentLocation;
-    query.location = {
-      $near: {
-        $geometry: {
-          type: 'Point',
-          coordinates: [lng, lat]
-        },
-        $maxDistance: maxDistanceMeters
-      }
-    };
-    const fallbackWorkers = await Worker.find(query)
-      .populate('user', '-password')
-      .limit(limit);
-    return fallbackWorkers;
-  }
+  const workers = await Worker.find(query)
+    .populate('user', '-password')
+    .limit(limit);
+  
+  return workers;
 };
 
 /**
@@ -100,6 +83,6 @@ const selectNextRoundWorkers = (allNearbyWorkers, excludedWorkerIds = [], count 
 
 module.exports = {
   calculateDistanceKm,
-  findNearbyWorkers,
+  findNearbyAvailableWorkers,
   selectNextRoundWorkers
 };

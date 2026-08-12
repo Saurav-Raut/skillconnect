@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import axios from 'axios';
 
-const RapidoMatchingModal = ({
+const LiveMatchMatchingModal = ({
   isOpen,
   onClose,
   bookingId,
@@ -42,10 +42,10 @@ const RapidoMatchingModal = ({
 
   useEffect(() => {
     if (bookingId && isOpen) {
-      sessionStorage.setItem('rapido_active_booking', bookingId);
-      const savedStatus = sessionStorage.getItem('rapido_match_status_' + bookingId);
-      const savedWorker = sessionStorage.getItem('rapido_matched_worker_' + bookingId);
-      const savedBooking = sessionStorage.getItem('rapido_matched_booking_' + bookingId);
+      sessionStorage.setItem('liveMatch_active_booking', bookingId);
+      const savedStatus = sessionStorage.getItem('liveMatch_match_status_' + bookingId);
+      const savedWorker = sessionStorage.getItem('liveMatch_matched_worker_' + bookingId);
+      const savedBooking = sessionStorage.getItem('liveMatch_matched_booking_' + bookingId);
       if (savedStatus === 'matched' && savedWorker) {
         setMatchStatus('matched');
         try {
@@ -85,9 +85,9 @@ const RapidoMatchingModal = ({
         setMatchStatus('matched');
         setMatchedWorker(data.worker);
         setMatchedBooking(data.booking || { _id: bookingId });
-        sessionStorage.setItem('rapido_match_status_' + bookingId, 'matched');
-        if (data.worker) sessionStorage.setItem('rapido_matched_worker_' + bookingId, JSON.stringify(data.worker));
-        if (data.booking) sessionStorage.setItem('rapido_matched_booking_' + bookingId, JSON.stringify(data.booking));
+        sessionStorage.setItem('liveMatch_match_status_' + bookingId, 'matched');
+        if (data.worker) sessionStorage.setItem('liveMatch_matched_worker_' + bookingId, JSON.stringify(data.worker));
+        if (data.booking) sessionStorage.setItem('liveMatch_matched_booking_' + bookingId, JSON.stringify(data.booking));
       }
     };
 
@@ -96,7 +96,7 @@ const RapidoMatchingModal = ({
       if (data.bookingId === bookingId) {
         setMatchStatus('failed');
         setFailReason(data.message || 'No available workers accepted after 3 rounds.');
-        sessionStorage.setItem('rapido_match_status_' + bookingId, 'failed');
+        sessionStorage.setItem('liveMatch_match_status_' + bookingId, 'failed');
       }
     };
 
@@ -108,16 +108,16 @@ const RapidoMatchingModal = ({
     };
 
     socket.on('connect', handleReconnect);
-    socket.on('rapidoRoundProgress', handleRoundProgress);
-    socket.on('rapidoMatchFound', handleMatchFound);
-    socket.on('rapidoMatchFailed', handleMatchFailed);
+    socket.on('liveMatchRoundProgress', handleRoundProgress);
+    socket.on('liveMatchMatchFound', handleMatchFound);
+    socket.on('liveMatchMatchFailed', handleMatchFailed);
     socket.on('scopedMessageReceived', handleScopedMessage);
 
     return () => {
       socket.off('connect', handleReconnect);
-      socket.off('rapidoRoundProgress', handleRoundProgress);
-      socket.off('rapidoMatchFound', handleMatchFound);
-      socket.off('rapidoMatchFailed', handleMatchFailed);
+      socket.off('liveMatchRoundProgress', handleRoundProgress);
+      socket.off('liveMatchMatchFound', handleMatchFound);
+      socket.off('liveMatchMatchFailed', handleMatchFailed);
       socket.off('scopedMessageReceived', handleScopedMessage);
     };
   }, [isOpen, socket, bookingId]);
@@ -169,7 +169,7 @@ const RapidoMatchingModal = ({
 
   const handleCancelBooking = () => {
     if (socket && bookingId) {
-      socket.emit('cancelRapidoBooking', {
+      socket.emit('cancelLiveMatchBooking', {
         bookingId,
         cancelledBy: 'household'
       });
@@ -430,7 +430,7 @@ const RapidoMatchingModal = ({
                 boxShadow: '0 4px 14px rgba(34, 197, 94, 0.4)'
               }}
             >
-              <Navigation size={18} /> Open Live Map (Rapido View)
+              <Navigation size={18} /> Open Live Map (LiveMatch View)
             </button>
           </div>
         )}
@@ -480,7 +480,7 @@ const RapidoMatchingModal = ({
                   setMatchStatus('searching');
                   // Trigger again with radiusKm * 2
                   if (socket && bookingId) {
-                    socket.emit('startRapidoMatch', {
+                    socket.emit('startLiveMatchMatch', {
                       bookingId,
                       skill: skillRequested,
                       coordinates: [80.5180, 16.5190],
@@ -708,4 +708,4 @@ const RapidoMatchingModal = ({
   );
 };
 
-export default RapidoMatchingModal;
+export default LiveMatchMatchingModal;

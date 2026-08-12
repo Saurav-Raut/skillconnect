@@ -9,32 +9,43 @@ const LiveMap = ({ workerName = 'Karthik Reddy', bookingId = 'SK8291', workerId 
   const markerRef = useRef(null);
   const polylineRef = useRef(null);
 
-  // Real street coordinates around Amaravati / Vijayawada / Thullur region
+  // Real street coordinates around Amaravati / Vijayawada / Thullur region (Household Destination)
   const homeCoords = [16.5190, 80.5180];
   
-  // Waypoints along a real street route to simulate GPS driving/riding
-  const routeWaypoints = [
-    [16.5020, 80.4990],
-    [16.5060, 80.5030],
-    [16.5100, 80.5080],
-    [16.5140, 80.5130],
-    [16.5170, 80.5160],
-    [16.5190, 80.5180]
-  ];
-
-  const [waypointIndex, setWaypointIndex] = useState(0);
-  const [distance, setDistance] = useState(3.4); // km
-  const [speed, setSpeed] = useState(26); // km/h
-  const [eta, setEta] = useState(12); // mins
-  const [statusText, setStatusText] = useState('Worker is riding toward your location on Secretariat Road');
+  const [distance, setDistance] = useState('...'); // km
+  const [speed, setSpeed] = useState(0); // km/h
+  const [eta, setEta] = useState('...'); // mins
+  const [statusText, setStatusText] = useState('Waiting for worker location stream...');
   const [arrived, setArrived] = useState(false);
+
+  const calculateDistanceKm = (lat1, lon1, lat2, lon2) => {
+    const p = 0.017453292519943295;
+    const c = Math.cos;
+    const a = 0.5 - c((lat2 - lat1) * p)/2 + 
+            c(lat1 * p) * c(lat2 * p) * 
+            (1 - c((lon2 - lon1) * p))/2;
+    return 12742 * Math.asin(Math.sqrt(a)); 
+  };
+
+  const animateMarker = (marker, startLatLng, endLatLng, durationMs = 3000) => {
+    const startTime = performance.now();
+    const animate = (time) => {
+      let progress = (time - startTime) / durationMs;
+      if (progress > 1) progress = 1;
+      const currentLat = startLatLng.lat + (endLatLng.lat - startLatLng.lat) * progress;
+      const currentLng = startLatLng.lng + (endLatLng.lng - startLatLng.lng) * progress;
+      marker.setLatLng([currentLat, currentLng]);
+      if (progress < 1) requestAnimationFrame(animate);
+    };
+    requestAnimationFrame(animate);
+  };
 
   useEffect(() => {
     if (!mapContainerRef.current) return;
 
     if (!mapRef.current) {
       mapRef.current = L.map(mapContainerRef.current, {
-        center: [16.5110, 80.5090],
+        center: [16.5110, 80.5090], // initial center
         zoom: 14,
         zoomControl: true,
         attributionControl: false
@@ -60,97 +71,91 @@ const LiveMap = ({ workerName = 'Karthik Reddy', bookingId = 'SK8291', workerId 
       L.marker(homeCoords, { icon: homeIcon })
         .addTo(mapRef.current)
         .bindPopup(`<b>Your Address</b><br/>Flat 4B, Amaravati Residency`);
-
-      // Add Polyline Route Line
-      polylineRef.current = L.polyline(routeWaypoints, {
-        color: '#6366f1',
-        weight: 6,
-        opacity: 0.85,
-        lineCap: 'round',
-        lineJoin: 'round',
-        dashArray: '1, 8'
-      }).addTo(mapRef.current);
     }
 
     return () => {
-      // Map cleanup if unmounting
+      // Map cleanup if unmounting handled by React
     };
   }, []);
 
-  // Update Worker Marker as waypoint progresses
+  // Handle Real-Time GPS Tracking via Socket
   useEffect(() => {
-    if (!mapRef.current) return;
+    if (!window.socket) return;
+    
+    // Request joining the booking room to receive scoped location updates
+    window.socket.emit('joinBooking', { bookingId, userId: 'household' });
 
-    const currentCoord = routeWaypoints[waypointIndex];
+    let lastCoords = null;
+    let lastTime = Date.now();
 
-    const workerIcon = L.divIcon({
-      className: 'tracking-worker-pin',
-      html: `<div style="
-        padding: 6px 14px; border-radius: 99px;
-        background: #0f172a; color: white; display: flex;
-        align-items: center; gap: 8px; font-size: 13px; font-weight: 800;
-        box-shadow: 0 8px 24px rgba(15, 23, 42, 0.4); border: 2.5px solid #6366f1;
-        white-space: nowrap;
-      ">
-        <span style="font-size: 18px;">🛵</span>
-        <span>${workerName}</span>
-      </div>`,
-      iconSize: [160, 36],
-      iconAnchor: [80, 18]
-    });
+    const handleLocationChange = (data) => {
+      if (!data.coordinates || data.coordinates.length !== 2) return;
+      
+      const newLat = data.coordinates[1];
+      const newLng = data.coordinates[0];
+      const newCoord = [newLat, newLng];
 
-    if (!markerRef.current) {
-      markerRef.current = L.marker(currentCoord, { icon: workerIcon }).addTo(mapRef.current);
-    } else {
-      markerRef.current.setLatLng(currentCoord);
-      markerRef.current.setIcon(workerIcon);
-    }
-
-    // Smoothly pan map toward moving worker
-    mapRef.current.panTo(currentCoord, { animate: true, duration: 1 });
-
-  }, [waypointIndex, workerName]);
-
-  // GPS Movement Simulation Interval (Rapido Style)
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setWaypointIndex((prev) => {
-        if (prev >= routeWaypoints.length - 1) {
-          clearInterval(interval);
-          setDistance(0);
-          setEta(0);
-          setSpeed(0);
-          setStatusText('Worker has arrived at your location!');
-          setArrived(true);
-          return prev;
-        }
-
-        const nextIdx = prev + 1;
-        const remaining = (routeWaypoints.length - 1 - nextIdx);
-        const newDist = (remaining * 0.7).toFixed(1);
-        setDistance(newDist);
-        setEta(Math.max(1, remaining * 2));
-        setSpeed(remaining === 0 ? 0 : 22 + Math.floor(Math.random() * 8));
-
-        if (remaining === 1) {
-          setStatusText('Worker is turning into your street...');
-        }
-
-        // Emit socket coordinates if live
-        if (window.socket && workerId) {
-          window.socket.emit('updateLocation', {
-            workerId,
-            bookingId,
-            coordinates: routeWaypoints[nextIdx]
-          });
-        }
-
-        return nextIdx;
+      const workerIcon = L.divIcon({
+        className: 'tracking-worker-pin',
+        html: `<div style="
+          padding: 6px 14px; border-radius: 99px;
+          background: #0f172a; color: white; display: flex;
+          align-items: center; gap: 8px; font-size: 13px; font-weight: 800;
+          box-shadow: 0 8px 24px rgba(15, 23, 42, 0.4); border: 2.5px solid #6366f1;
+          white-space: nowrap;
+        ">
+          <span style="font-size: 18px;">🛵</span>
+          <span>${workerName}</span>
+        </div>`,
+        iconSize: [160, 36],
+        iconAnchor: [80, 18]
       });
-    }, 2800);
 
-    return () => clearInterval(interval);
-  }, [bookingId, workerId]);
+      if (!markerRef.current) {
+        markerRef.current = L.marker(newCoord, { icon: workerIcon }).addTo(mapRef.current);
+        mapRef.current.panTo(newCoord, { animate: true, duration: 1 });
+      } else {
+        const startLatLng = markerRef.current.getLatLng();
+        const endLatLng = L.latLng(newLat, newLng);
+        animateMarker(markerRef.current, startLatLng, endLatLng, 3000);
+        mapRef.current.panTo(endLatLng, { animate: true, duration: 1 });
+      }
+
+      // Calculate distance & ETA based on real coords
+      const dist = calculateDistanceKm(newLat, newLng, homeCoords[0], homeCoords[1]);
+      setDistance(dist.toFixed(1));
+      setEta(Math.max(1, Math.ceil(dist * 2.5))); // Approx ETA
+
+      if (lastCoords) {
+        // Calculate speed between points
+        const timeDiffHours = (Date.now() - lastTime) / (1000 * 60 * 60);
+        if (timeDiffHours > 0) {
+          const traveled = calculateDistanceKm(lastCoords[0], lastCoords[1], newLat, newLng);
+          const currentSpeed = (traveled / timeDiffHours);
+          setSpeed(Math.min(100, Math.round(currentSpeed))); // Cap display speed to 100km/h
+        }
+      }
+
+      if (dist < 0.1) {
+        setArrived(true);
+        setStatusText('Worker has arrived at your location!');
+        setSpeed(0);
+        setDistance(0);
+        setEta(0);
+      } else {
+        setStatusText('Worker is heading to your location');
+      }
+
+      lastCoords = newCoord;
+      lastTime = Date.now();
+    };
+
+    window.socket.on('locationChanged', handleLocationChange);
+    
+    return () => {
+      window.socket.off('locationChanged', handleLocationChange);
+    };
+  }, [bookingId, workerName]);
 
   return (
     <div className="card" style={{ padding: 0, overflow: 'hidden', border: '2px solid var(--line)', borderRadius: '20px', position: 'relative' }}>
@@ -188,7 +193,7 @@ const LiveMap = ({ workerName = 'Karthik Reddy', bookingId = 'SK8291', workerId 
         <span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>• OSM Free</span>
       </div>
 
-      {/* Bottom Floating Rapido/Zomato Status Panel */}
+      {/* Bottom Floating LiveMatch/Zomato Status Panel */}
       <div style={{
         position: 'absolute',
         bottom: '16px',

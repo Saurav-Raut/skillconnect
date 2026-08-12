@@ -4,14 +4,14 @@ import { formatDistanceDisplay, calculateEtaMinutes } from '@skillconnect/shared
 import { Colors, Spacing, Radius } from '../theme/colors';
 import { CustomButton } from './CustomButton';
 
-interface RapidoIncomingModalProps {
+interface LiveMatchIncomingModalProps {
   visible: boolean;
   job: any | null;
   onAccept: (jobId: string) => void;
   onReject: (jobId: string) => void;
 }
 
-export const RapidoIncomingModal: React.FC<RapidoIncomingModalProps> = ({
+export const LiveMatchIncomingModal: React.FC<LiveMatchIncomingModalProps> = ({
   visible,
   job,
   onAccept,
@@ -58,7 +58,7 @@ export const RapidoIncomingModal: React.FC<RapidoIncomingModalProps> = ({
             <Text style={styles.timerText}>⏱ {timeLeft}s to accept</Text>
           </View>
 
-          <Text style={styles.title}>⚡ Incoming Rapido Match!</Text>
+          <Text style={styles.title}>⚡ Incoming Live Match!</Text>
           <Text style={styles.serviceText}>{job.skillCategory || 'Service Booking'}</Text>
 
           <View style={styles.infoBox}>

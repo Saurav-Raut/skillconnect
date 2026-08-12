@@ -1,12 +1,14 @@
 const Worker = require('../models/Worker');
 const Booking = require('../models/Booking');
 const ChatMessage = require('../models/ChatMessage');
-const { findNearbyWorkers, selectNextRoundWorkers } = require('../utils/geoMatch');
+const { findNearbyAvailableWorkers, selectNextRoundWorkers } = require('../utils/geoMatch');
 
-// In-memory active broadcast manager for Rapido live matching
+// In-memory active broadcast manager for LiveMatch live matching
 const activeBroadcasts = new Map();
 // Rate-limiting map for location updates (key -> timestamp)
 const lastLocationUpdates = new Map();
+// Grace period disconnect timeouts (key: workerId -> timeoutId)
+const disconnectTimeouts = new Map();
 
 const RATE_LIMIT_INTERVAL_MS = 3000; // max once per 3 seconds
 
@@ -23,7 +25,7 @@ module.exports = (io) => {
 
     try {
       // Find all available workers matching skill within radius
-      const allNearby = await findNearbyWorkers({
+      const allNearby = await findNearbyAvailableWorkers({
         skill: broadcast.skillRequested,
         coordinates: broadcast.householdLocation,
         maxDistanceKm: broadcast.radiusKm,
@@ -37,7 +39,7 @@ module.exports = (io) => {
         // No more available workers to notify
         if (broadcast.timer) clearTimeout(broadcast.timer);
         broadcast.status = 'failed';
-        io.to(`booking_${bookingId}`).emit('rapidoMatchFailed', {
+        io.to(`booking_${bookingId}`).emit('liveMatchMatchFailed', {
           bookingId,
           reason: 'NO_WORKERS_AVAILABLE',
           message: `No available ${broadcast.skillRequested || 'workers'} accepted after ${round} round(s). Please retry or widen radius.`
@@ -54,7 +56,7 @@ module.exports = (io) => {
         currentRoundWorkerIds.push(wid);
 
         // Emit incoming request card to this worker
-        io.emit('incomingRapidoRequest', {
+        io.emit('incomingLiveMatchRequest', {
           bookingId: broadcast.bookingId,
           skill: broadcast.skillRequested,
           householdName: broadcast.householdName || 'Household Customer',
@@ -78,7 +80,7 @@ module.exports = (io) => {
       });
 
       // Emit round progress to Household room
-      io.to(`booking_${bookingId}`).emit('rapidoRoundProgress', {
+      io.to(`booking_${bookingId}`).emit('liveMatchRoundProgress', {
         bookingId,
         round,
         maxRounds: 3,
@@ -92,12 +94,12 @@ module.exports = (io) => {
         const b = activeBroadcasts.get(bookingId.toString());
         if (b && b.status === 'searching') {
           if (b.round < 3) {
-            console.log(`[Rapido Match] Round ${b.round} timed out for booking ${bookingId}. Moving to Round ${b.round + 1}`);
+            console.log(`[Live Match] Round ${b.round} timed out for booking ${bookingId}. Moving to Round ${b.round + 1}`);
             await broadcastRoundToWorkers(bookingId, b.round + 1);
           } else {
-            console.log(`[Rapido Match] All 3 rounds expired for booking ${bookingId}`);
+            console.log(`[Live Match] All 3 rounds expired for booking ${bookingId}`);
             b.status = 'failed';
-            io.to(`booking_${bookingId}`).emit('rapidoMatchFailed', {
+            io.to(`booking_${bookingId}`).emit('liveMatchMatchFailed', {
               bookingId,
               reason: 'TIMEOUT_ALL_ROUNDS',
               message: `No available ${b.skillRequested || 'workers'} accepted after 3 rounds. You can retry with a wider radius (e.g. 10km).`
@@ -108,7 +110,7 @@ module.exports = (io) => {
         }
       }, 30000);
     } catch (err) {
-      console.error('[Rapido Match] Broadcast Error:', err.message);
+      console.error('[Live Match] Broadcast Error:', err.message);
     }
   };
 
@@ -119,6 +121,28 @@ module.exports = (io) => {
     socket.on('joinBooking', ({ bookingId, userId }) => {
       socket.join(`booking_${bookingId}`);
       console.log(`User ${userId} joined room for booking_${bookingId}`);
+    });
+
+    // Handle explicit worker online/offline toggles and socket tagging
+    socket.on('workerOnlineToggle', async ({ workerId, isOnline }) => {
+      try {
+        if (!workerId) return;
+        socket.workerId = workerId; // Tag socket for disconnect tracking
+
+        if (isOnline) {
+          // Clear any pending disconnect timeout (silent reconnect success)
+          const pending = disconnectTimeouts.get(workerId);
+          if (pending) {
+            clearTimeout(pending);
+            disconnectTimeouts.delete(workerId);
+          }
+        }
+        
+        await Worker.findByIdAndUpdate(workerId, { isOnline });
+        console.log(`Worker ${workerId} isOnline set to ${isOnline}`);
+      } catch (err) {
+        console.error('Toggle Error:', err.message);
+      }
     });
 
     // Cross-Platform alias handlers for Web + Mobile real-time sync
@@ -190,8 +214,8 @@ module.exports = (io) => {
       }
     });
 
-    // Alias for two-way Rapido location streaming
-    socket.on('streamRapidoLocation', (data) => {
+    // Alias for two-way LiveMatch location streaming
+    socket.on('streamLiveMatchLocation', (data) => {
       socket.emit('updateLocation', data);
     });
 
@@ -200,9 +224,9 @@ module.exports = (io) => {
     // ==========================================
 
     /**
-     * Step 1-4: Household starts a Rapido Live Match broadcast
+     * Step 1-4: Household starts a LiveMatch Live Match broadcast
      */
-    socket.on('startRapidoMatch', async ({
+    socket.on('startLiveMatchMatch', async ({
       bookingId,
       skill,
       coordinates,
@@ -214,7 +238,7 @@ module.exports = (io) => {
     }) => {
       if (!bookingId || !coordinates || coordinates.length !== 2) return;
 
-      console.log(`[Rapido Match] Starting broadcast for booking ${bookingId} (${skill}) within ${radiusKm}km`);
+      console.log(`[Live Match] Starting broadcast for booking ${bookingId} (${skill}) within ${radiusKm}km`);
 
       socket.join(`booking_${bookingId}`);
 
@@ -238,9 +262,9 @@ module.exports = (io) => {
     });
 
     /**
-     * Step 5: Worker accepts Rapido job (First to accept wins!)
+     * Step 5: Worker accepts LiveMatch job (First to accept wins!)
      */
-    socket.on('acceptRapidoJob', async ({ bookingId, workerId }) => {
+    socket.on('acceptLiveMatchJob', async ({ bookingId, workerId }) => {
       if (!bookingId || !workerId) return;
       const bKey = bookingId.toString();
       const broadcast = activeBroadcasts.get(bKey);
@@ -248,7 +272,7 @@ module.exports = (io) => {
       // Atomic race resolution check
       if (!broadcast || broadcast.status !== 'searching') {
         // Another worker already took it or broadcast ended
-        socket.emit('rapidoJobAlreadyTaken', {
+        socket.emit('liveMatchJobAlreadyTaken', {
           bookingId,
           reason: 'ALREADY_ACCEPTED',
           message: 'Job already taken by another nearby worker.'
@@ -281,7 +305,7 @@ module.exports = (io) => {
         // Notify all other workers who received the broadcast that the job is already taken
         broadcast.notifiedWorkerIds.forEach((id) => {
           if (id !== workerId.toString()) {
-            io.emit('rapidoJobAlreadyTaken', {
+            io.emit('liveMatchJobAlreadyTaken', {
               bookingId,
               winnerWorkerId: workerId,
               message: 'Job Already Taken by another nearby worker'
@@ -290,7 +314,7 @@ module.exports = (io) => {
         });
 
         // Notify Household room that a worker won and is en route!
-        io.to(`booking_${bookingId}`).emit('rapidoMatchFound', {
+        io.to(`booking_${bookingId}`).emit('liveMatchMatchFound', {
           bookingId,
           worker: workerDoc,
           booking: updatedBooking,
@@ -299,7 +323,7 @@ module.exports = (io) => {
         });
 
         // Notify the winning worker socket
-        socket.emit('rapidoJobWinSuccess', {
+        socket.emit('liveMatchJobWinSuccess', {
           bookingId,
           worker: workerDoc,
           booking: updatedBooking
@@ -308,14 +332,14 @@ module.exports = (io) => {
         // Clean up memory after winning
         activeBroadcasts.delete(bKey);
       } catch (err) {
-        console.error('[Rapido Accept Error]:', err.message);
+        console.error('[LiveMatch Accept Error]:', err.message);
       }
     });
 
     /**
-     * Step 6: Worker rejects Rapido job -> trigger next round if current round empty
+     * Step 6: Worker rejects LiveMatch job -> trigger next round if current round empty
      */
-    socket.on('rejectRapidoJob', async ({ bookingId, workerId }) => {
+    socket.on('rejectLiveMatchJob', async ({ bookingId, workerId }) => {
       if (!bookingId || !workerId) return;
       const bKey = bookingId.toString();
       const broadcast = activeBroadcasts.get(bKey);
@@ -329,11 +353,11 @@ module.exports = (io) => {
       if (broadcast.currentRoundWorkerIds.length === 0) {
         if (broadcast.timer) clearTimeout(broadcast.timer);
         if (broadcast.round < 3) {
-          console.log(`[Rapido Match] All workers in Round ${broadcast.round} rejected. Proceeding to Round ${broadcast.round + 1}`);
+          console.log(`[Live Match] All workers in Round ${broadcast.round} rejected. Proceeding to Round ${broadcast.round + 1}`);
           await broadcastRoundToWorkers(bookingId, broadcast.round + 1);
         } else {
           broadcast.status = 'failed';
-          io.to(`booking_${bookingId}`).emit('rapidoMatchFailed', {
+          io.to(`booking_${bookingId}`).emit('liveMatchMatchFailed', {
             bookingId,
             reason: 'ALL_WORKERS_REJECTED',
             message: `No available ${broadcast.skillRequested || 'workers'} accepted after 3 rounds. Please retry or widen radius.`
@@ -347,9 +371,9 @@ module.exports = (io) => {
     /**
      * Step 9: Cancel before job start -> reset worker availability back to pool
      */
-    socket.on('cancelRapidoBooking', async ({ bookingId, cancelledBy = 'household', workerId }) => {
+    socket.on('cancelLiveMatchBooking', async ({ bookingId, cancelledBy = 'household', workerId }) => {
       if (!bookingId) return;
-      console.log(`[Rapido Match] Booking ${bookingId} cancelled by ${cancelledBy}`);
+      console.log(`[Live Match] Booking ${bookingId} cancelled by ${cancelledBy}`);
 
       try {
         const bKey = bookingId.toString();
@@ -367,13 +391,13 @@ module.exports = (io) => {
           await Worker.findByIdAndUpdate(workerId, { isAvailable: true });
         }
 
-        io.to(`booking_${bookingId}`).emit('rapidoBookingCancelled', {
+        io.to(`booking_${bookingId}`).emit('liveMatchBookingCancelled', {
           bookingId,
           cancelledBy,
           message: `Booking cancelled by ${cancelledBy}. Worker availability reset.`
         });
       } catch (err) {
-        console.error('[Rapido Cancel Error]:', err.message);
+        console.error('[LiveMatch Cancel Error]:', err.message);
       }
     });
 
@@ -436,6 +460,20 @@ module.exports = (io) => {
 
     socket.on('disconnect', () => {
       console.log(`Socket Disconnected: ${socket.id}`);
+      if (socket.workerId) {
+        const wid = socket.workerId;
+        // Start 15-20s grace period before marking offline
+        const timeout = setTimeout(async () => {
+          try {
+            await Worker.findByIdAndUpdate(wid, { isOnline: false });
+            disconnectTimeouts.delete(wid);
+            console.log(`Worker ${wid} marked offline after 15s grace period.`);
+          } catch(err) {
+            console.error('Disconnect Grace Error:', err.message);
+          }
+        }, 18000); // 18 seconds grace period
+        disconnectTimeouts.set(wid, timeout);
+      }
     });
   });
 };
