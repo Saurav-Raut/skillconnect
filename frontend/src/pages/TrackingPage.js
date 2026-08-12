@@ -17,8 +17,26 @@ const TrackingPage = () => {
   const { userInfo } = useSelector((state) => state.user);
   const { bookingsList, loading } = useSelector((state) => state.booking);
   
-  const booking = bookingsList.find(b => b._id === bookingId);
-  const workerName = booking?.worker?.user?.name || searchParams.get('workerName') || 'Karthik Reddy';
+  // Find the specific booking, or fallback to the most recent one if no valid ID provided
+  let booking = bookingsList.find(b => b._id === bookingId);
+  if (!booking && bookingsList.length > 0) {
+    booking = bookingsList[0];
+  }
+
+  const activeBookingId = booking?._id || bookingId;
+  const workerUser = booking?.worker?.user;
+  const workerName = workerUser?.name || searchParams.get('workerName') || 'Worker';
+  const workerSkill = booking?.worker?.skill || 'Professional';
+  
+  const workerCoords = booking?.worker?.currentLocation?.coordinates?.length === 2 
+    ? [booking.worker.currentLocation.coordinates[1], booking.worker.currentLocation.coordinates[0]] // [lat, lng]
+    : (booking?.worker?.location?.coordinates?.length === 2 
+      ? [booking.worker.location.coordinates[1], booking.worker.location.coordinates[0]] 
+      : [16.5110, 80.5090]);
+
+  const householdCoords = booking?.householdLocation?.coordinates?.length === 2 
+    ? [booking.householdLocation.coordinates[1], booking.householdLocation.coordinates[0]]
+    : [16.5190, 80.5180];
   
   const [showFaceScanner, setShowFaceScanner] = useState(false);
   const [scanType, setScanType] = useState(''); // 'checkin' or 'checkout'
@@ -35,43 +53,33 @@ const TrackingPage = () => {
 
   const status = demoStatus || booking?.status || 'pending';
 
-  // Simulated Location Tracking for Workers
+  // Real Location Tracking for Workers
   useEffect(() => {
     if (userInfo?.role === 'worker' && status === 'accepted') {
-      let lat = 16.5110;
-      let lng = 80.5090;
-      const targetLat = 16.5190;
-      const targetLng = 80.5180;
-      
-      const steps = 60; // take 60 updates to reach destination (approx 3 minutes at 3s per update)
-      const latStep = (targetLat - lat) / steps;
-      const lngStep = (targetLng - lng) / steps;
-      
-      const interval = setInterval(() => {
-        if (!window.socket) return;
+      if (!navigator.geolocation) {
+        console.warn("Geolocation is not supported by this browser.");
+        return;
+      }
 
-        lat += latStep;
-        lng += lngStep;
-        
-        // Don't overshoot
-        if ((latStep > 0 && lat > targetLat) || (latStep < 0 && lat < targetLat)) lat = targetLat;
-        if ((lngStep > 0 && lng > targetLng) || (lngStep < 0 && lng < targetLng)) lng = targetLng;
-        
-        window.socket.emit('updateLocation', {
-          workerId: userInfo._id,
-          bookingId,
-          coordinates: [lng, lat], // socket expects [lng, lat]
-          role: 'worker'
-        });
-        
-        if (lat === targetLat && lng === targetLng) {
-          clearInterval(interval);
-        }
-      }, 3000);
+      const watchId = navigator.geolocation.watchPosition(
+        (position) => {
+          if (!window.socket) return;
+          const { latitude, longitude } = position.coords;
+          
+          window.socket.emit('updateLocation', {
+            workerId: userInfo._id,
+            bookingId: activeBookingId,
+            coordinates: [longitude, latitude], // MongoDB format: [lng, lat]
+            role: 'worker'
+          });
+        },
+        (error) => console.error("GPS Tracking Error:", error.message),
+        { enableHighAccuracy: true, maximumAge: 10000, timeout: 10000 }
+      );
       
-      return () => clearInterval(interval);
+      return () => navigator.geolocation.clearWatch(watchId);
     }
-  }, [userInfo, status, bookingId]);
+  }, [userInfo, status, activeBookingId]);
 
   const handleFaceScan = (faceData) => {
     if (scanType === 'checkin') {
@@ -142,6 +150,28 @@ const TrackingPage = () => {
       alert(err.response?.data?.error || 'Failed to submit review');
     }
   };
+
+  if (loading && !booking) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
+        <div className="badge" style={{ padding: '12px 24px', fontSize: '1rem' }}>
+          <div className="spinner" style={{ width: '20px', height: '20px', border: '3px solid var(--primary)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite', display: 'inline-block', marginRight: '10px', verticalAlign: 'middle' }}></div>
+          <style>{`@keyframes spin { 100% { transform: rotate(360deg); } }`}</style>
+          Loading live tracking details...
+        </div>
+      </div>
+    );
+  }
+
+  if (!loading && !booking) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh', flexDirection: 'column', gap: '16px' }}>
+        <div style={{ fontSize: '3rem' }}>📭</div>
+        <div style={{ fontSize: '1.2rem', fontWeight: 600 }}>No active tracking found</div>
+        <div style={{ color: 'var(--text-muted)' }}>You don't have any active bookings to track right now.</div>
+      </div>
+    );
+  }
 
   return (
     <div className="tracking-layout fade-in">
@@ -291,11 +321,18 @@ const TrackingPage = () => {
             )}
           </div>
         ) : (
-          <LiveMap workerName={workerName} bookingId={bookingId} workerId={workerId} />
+          <LiveMap 
+            workerName={workerName} 
+            workerSkill={workerSkill}
+            bookingId={activeBookingId} 
+            workerId={workerUser?._id || workerId}
+            workerInitialCoords={workerCoords}
+            householdCoords={householdCoords}
+          />
         )}
       </div>
 
-      <SOSButton bookingId={bookingId} userId={userInfo?._id} role={userInfo?.role} />
+      <SOSButton bookingId={activeBookingId} userId={userInfo?._id} role={userInfo?.role} />
 
       <style>{`
         .tracking-layout {

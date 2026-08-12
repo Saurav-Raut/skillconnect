@@ -35,8 +35,7 @@ const BookingSchema = new mongoose.Schema({
   householdLocation: {
     type: {
       type: String,
-      enum: ['Point'],
-      default: 'Point'
+      enum: ['Point']
     },
     coordinates: {
       type: [Number]
