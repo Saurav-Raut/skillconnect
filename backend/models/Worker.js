@@ -27,8 +27,7 @@ const WorkerSchema = new mongoose.Schema({
   location: {
     type: {
       type: String,
-      enum: ['Point'],
-      default: 'Point'
+      enum: ['Point']
     },
     coordinates: {
       type: [Number]
@@ -38,8 +37,7 @@ const WorkerSchema = new mongoose.Schema({
   currentLocation: {
     type: {
       type: String,
-      enum: ['Point'],
-      default: 'Point'
+      enum: ['Point']
     },
     coordinates: {
       type: [Number]
