@@ -134,6 +134,24 @@ const cleanText = (text) => {
 };
 
 /**
+ * Free public translation API helper
+ */
+const translateText = async (text, sourceLang, targetLang) => {
+  if (sourceLang === targetLang || !text) return text;
+  try {
+    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sourceLang}&tl=${targetLang}&dt=t&q=${encodeURIComponent(text)}`;
+    const response = await fetch(url);
+    const data = await response.json();
+    if (data && data[0]) {
+      return data[0].map(s => s[0]).join('');
+    }
+  } catch (err) {
+    console.error('[Chatbot Engine] Translation failed:', err.message);
+  }
+  return text; // fallback to original
+};
+
+/**
  * Detect query language
  */
 const detectLanguage = (text) => {
@@ -293,7 +311,14 @@ const fetchLiveData = async (intent, userDoc, userRole) => {
  */
 const processChatbotMessage = async ({ text, userDoc, userRole, sessionId, uiLanguage }) => {
   const language = uiLanguage || detectLanguage(text);
-  const cleanInput = cleanText(text);
+  
+  // Translate query to English for DB searching and intent matching
+  let processingText = text;
+  if (language !== 'en') {
+    processingText = await translateText(text, language, 'en');
+  }
+  
+  const cleanInput = cleanText(processingText);
 
   // 1. Detect Intent
   let detectedIntent = 'fallback';
@@ -365,7 +390,7 @@ User Query: "${text}"`;
     try {
       const synthesisPrompt = `You are a helpful and polite customer support AI assistant for SkillConnect, a decentralized marketplace.
 Role of the user you are talking to: ${userRole || 'Guest'}.
-Language: You MUST respond in the same language the user queried in (English, Hindi, or Hinglish).
+Language: You MUST respond in English.
 Constraints: Keep your response concise (under 3-4 sentences). Do NOT hallucinate. Use ONLY the provided context and live database data to answer.
 
 [CONTEXT FAQs]
@@ -374,7 +399,7 @@ ${kbText || 'No FAQ context available.'}
 [LIVE DATABASE DETAILS]
 ${liveData ? JSON.stringify(liveData) : 'No live database records found for this query.'}
 
-User Query: "${text}"`;
+User Query: "${processingText}"`;
 
       const response = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
@@ -396,87 +421,43 @@ User Query: "${text}"`;
     let matchedChunkText = '';
     // Only fetch RAG FAQ matches if we failed to identify a specific intent
     if (detectedIntent === 'fallback' && kbContextChunks && kbContextChunks.length > 0) {
-      const hiChunk = kbContextChunks.find(c => c.title.match(/[\u0900-\u097F]/) || c.content.match(/[\u0900-\u097F]/));
-      const enChunk = kbContextChunks.find(c => !c.title.match(/[\u0900-\u097F]/) && !c.content.match(/[\u0900-\u097F]/));
-      if (language === 'hi' && hiChunk) {
-        matchedChunkText = hiChunk.content;
-      } else if (language === 'en' && enChunk) {
-        matchedChunkText = enChunk.content;
-      } else {
-        matchedChunkText = kbContextChunks[0].content;
-      }
+      // Find English chunk since we translated query to English
+      const enChunk = kbContextChunks.find(c => !c.title.match(/[\u0900-\u097F]/) && !c.content.match(/[\u0900-\u097F]/)) || kbContextChunks[0];
+      matchedChunkText = enChunk.content;
     }
 
-    if (language === 'hi') {
-      // Hindi Responses
-      if (detectedIntent === 'track_order') {
-        if (liveData) {
-          replyText = `आपकी बुकिंग (ID: ${liveData.bookingId}) की वर्तमान स्थिति है: "${liveData.status}"। कुल भुगतान राशि ₹${liveData.totalAmount} है। विवरण देखने के लिए नीचे दिए गए बटन पर क्लिक करें।`;
-        } else {
-          replyText = `अपनी बुकिंग विवरण को ट्रैक करने के लिए, कृपया अपने खाते में लॉग इन करें और बुकिंग की स्थिति देखें। हमारा प्लेटफ़ॉर्म प्रत्येक बुकिंग के लिए रीयल-टाइम जीपीएस ट्रैकिंग प्रदान करता है।`;
-        }
-      } else if (detectedIntent === 'check_earnings') {
-        if (liveData) {
-          replyText = `आपकी कुल प्रमाणित कमाई ₹${liveData.totalEarnings} है। आपने ${liveData.completedJobsCount} काम पूरे किए हैं। आपका प्रति घंटा शुल्क ₹${liveData.ratePerHour} है। विवरण देखने के लिए नीचे दिए गए बटन पर क्लिक करें।`;
-        } else {
-          replyText = `एक पंजीकृत भागीदार के रूप में, आप अपने डैशबोर्ड में अपनी कमाई देख सकते हैं। ग्राहक द्वारा सत्यापन पूरा करने के बाद स्किलकनेक्ट सीधे बैंक खाते में भुगतान जारी करता है।`;
-        }
-      } else if (detectedIntent === 'create_booking') {
-        replyText = `एक सत्यापित कार्यकर्ता (Worker) को बुक करने के लिए, कृपया 'Find Workers' खोज पृष्ठ पर जाएं। अपने क्षेत्र और आवश्यकता के अनुसार कार्यकर्ता खोजें। शुरू करने के लिए नीचे दिए गए बटन पर क्लिक करें।`;
-      } else if (detectedIntent === 'view_profile') {
-        replyText = `अपनी प्रोफ़ाइल विवरण देखने या बदलने के लिए, कृपया प्रोफ़ाइल पृष्ठ पर जाएं। वहां आप अपना नाम, ईमेल और खाता विवरण बदल सकते हैं। शुरू करने के लिए नीचे दिए गए बटन पर क्लिक करें।`;
-      } else if (detectedIntent === 'register_as_worker') {
-        replyText = `स्किलकनेक्ट में कार्यकर्ता (Worker) के रूप में शामिल होने के लिए, आपको पंजीकरण करना होगा और अपना सरकारी पहचान पत्र अपलोड करना होगा। कृपया पंजीकरण फॉर्म भरने के लिए नीचे दिए गए बटन पर क्लिक करें।`;
-      } else if (detectedIntent === 'raise_complaint') {
-        replyText = `यदि आपको काम, भुगतान या सुरक्षा से संबंधित कोई समस्या है, तो आप शिकायत दर्ज कर सकते हैं। कृपया हमारी सुरक्षा टीम को रिपोर्ट भेजने के लिए नीचे दिए गए बटन का उपयोग करें।`;
-      } else if (detectedIntent === 'escalation_request' || shouldEscalate) {
-        replyText = `हम आपको एक मानव सहायता एजेंट से जोड़ रहे हैं। एक सपोर्ट टिकट (ID: ${sessionId.slice(0, 8)}) खोल दिया गया है। तुरंत सहायता के लिए, कृपया कस्टमर केयर को +1-800-555-0199 पर कॉल करें या customercare@skillconnect.com पर ईमेल करें। एक प्रतिनिधि 5 मिनट के भीतर आपसे संपर्क करेगा। असुविधा के लिए खेद है!`;
-      } else if (matchedChunkText) {
-        replyText = matchedChunkText;
+    // Single English logic flow
+    if (detectedIntent === 'track_order') {
+      if (liveData) {
+        replyText = `Your active booking (ID: ${liveData.bookingId}) is currently in status: "${liveData.status}". The total payment amount is ₹${liveData.totalAmount}. Click the button below to track details.`;
       } else {
-        replyText = `नमस्ते! मैं स्किलकनेक्ट का एआई सहायक हूँ। मैं सुरक्षा नीतियों, भुगतान और बुकिंग में आपकी सहायता कर सकता हूँ। क्या आप मुझे बता सकते हैं कि आपको किस प्रकार की सहायता चाहिए?\n\nतुरंत सहायता के लिए, कृपया कस्टमर केयर को +1-800-555-0199 पर कॉल करें या customercare@skillconnect.com पर ईमेल करें। एक प्रतिनिधि 5 मिनट के भीतर आपसे संपर्क करेगा। असुविधा के लिए खेद है!`;
+        replyText = `To track your booking details, please log into your account and view the active booking status. Our platform provides real-time GPS tracking and face scan verification for every booking.`;
       }
-    } else if (language === 'ta') {
-      if (matchedChunkText) {
-        replyText = matchedChunkText;
+    } else if (detectedIntent === 'check_earnings') {
+      if (liveData) {
+        replyText = `Your total verified earnings to date are ₹${liveData.totalEarnings} across ${liveData.completedJobsCount} completed jobs. Your current rate is ₹${liveData.ratePerHour}/hour. Click the button below to open your earnings dashboard.`;
       } else {
-        replyText = `வணக்கம்! நான் உங்கள் SkillConnect உதவி முகவர். பாதுகாப்பு, பணம் செலுத்துதல் அல்லது முன்பதிவு குறித்து என்னால் உதவ முடியும். உடனடியாக வாடிக்கையாளர் சேவையை தொடர்பு கொள்ள +1-800-555-0199 ஐ அழைக்கவும் அல்லது customercare@skillconnect.com க்கு மின்னஞ்சல் செய்யவும். ஒரு பிரதிநிதி 5 நிமிடங்களுக்குள் உங்களை தொடர்புகொள்வார்.`;
+        replyText = `As a registered partner, you can check your earnings in the partner dashboard. SkillConnect pays directly to your bank account via escrow once the customer completes verification.`;
       }
-    } else if (language === 'te') {
-      if (matchedChunkText) {
-        replyText = matchedChunkText;
-      } else {
-        replyText = `నమస్కారం! నేను మీ SkillConnect సహాయక ప్రతినిధిని. భద్రత, చెల్లింపులు లేదా బుకింగ్ గురించి నేను సహాయం చేయగలను. తక్షణ సహాయం కోసం కస్టమర్ కేర్‌ను +1-800-555-0199 కి కాల్ చేయండి లేదా customercare@skillconnect.com కి ఇమెయిల్ చేయండి. 5 నిమిషాల్లో ఒక ప్రతినిధి మిమ్మల్ని సంప్రదిస్తారు.`;
-      }
+    } else if (detectedIntent === 'create_booking') {
+      replyText = `To book a verified service partner on SkillConnect, navigate to the Find Workers search page. Select the trade and your location, pick a worker, and book them. Click the button below to start searching.`;
+    } else if (detectedIntent === 'view_profile') {
+      replyText = `To view or edit your profile details, navigate to the Profile page. There you can update your name, email, password, and other account settings. Click the button below to open your profile.`;
+    } else if (detectedIntent === 'register_as_worker') {
+      replyText = `To register as a service partner on SkillConnect, you need to sign up and upload a government-issued ID card. Click the button below to navigate to the registration form.`;
+    } else if (detectedIntent === 'raise_complaint') {
+      replyText = `If you have experienced an issue with service safety, workers, or customer interactions, you can file a complaint. Click the button below to reach the support team.`;
+    } else if (detectedIntent === 'escalation_request' || shouldEscalate) {
+      replyText = `Connecting you to a human agent... A support ticket (Session ID: ${sessionId.slice(0, 8)}) has been created in our escalation queue. An administrator will reply shortly. For urgent support, call Customer Care at +1-800-555-0199 or email customercare@skillconnect.com and an agent will reach you within 5 minutes. Sorry for the inconvenience!`;
+    } else if (matchedChunkText) {
+      replyText = matchedChunkText;
     } else {
-      // English Responses
-      if (detectedIntent === 'track_order') {
-        if (liveData) {
-          replyText = `Your active booking (ID: ${liveData.bookingId}) is currently in status: "${liveData.status}". The total payment amount is ₹${liveData.totalAmount}. Click the button below to track details.`;
-        } else {
-          replyText = `To track your booking details, please log into your account and view the active booking status. Our platform provides real-time GPS tracking and face scan verification for every booking.`;
-        }
-      } else if (detectedIntent === 'check_earnings') {
-        if (liveData) {
-          replyText = `Your total verified earnings to date are ₹${liveData.totalEarnings} across ${liveData.completedJobsCount} completed jobs. Your current rate is ₹${liveData.ratePerHour}/hour. Click the button below to open your earnings dashboard.`;
-        } else {
-          replyText = `As a registered partner, you can check your earnings in the partner dashboard. SkillConnect pays directly to your bank account via escrow once the customer completes verification.`;
-        }
-      } else if (detectedIntent === 'create_booking') {
-        replyText = `To book a verified service partner on SkillConnect, navigate to the Find Workers search page. Select the trade and your location, pick a worker, and book them. Click the button below to start searching.`;
-      } else if (detectedIntent === 'view_profile') {
-        replyText = `To view or edit your profile details, navigate to the Profile page. There you can update your name, email, password, and other account settings. Click the button below to open your profile.`;
-      } else if (detectedIntent === 'register_as_worker') {
-        replyText = `To register as a service partner on SkillConnect, you need to sign up and upload a government-issued ID card. Click the button below to navigate to the registration form.`;
-      } else if (detectedIntent === 'raise_complaint') {
-        replyText = `If you have experienced an issue with service safety, workers, or customer interactions, you can file a complaint. Click the button below to reach the support team.`;
-      } else if (detectedIntent === 'escalation_request' || shouldEscalate) {
-        replyText = `Connecting you to a human agent... A support ticket (Session ID: ${sessionId.slice(0, 8)}) has been created in our escalation queue. An administrator will reply shortly. For urgent support, call Customer Care at +1-800-555-0199 or email customercare@skillconnect.com and an agent will reach you within 5 minutes. Sorry for the inconvenience!`;
-      } else if (matchedChunkText) {
-        replyText = matchedChunkText;
-      } else {
-        replyText = `Hello! I am your SkillConnect support assistant. I can help with safety rules, payments, earnings, or booking tracking. What can I do for you today?\n\nIf you need urgent assistance, please call Customer Care at +1-800-555-0199 or email customercare@skillconnect.com and a support representative will reach you within 5 minutes. Sorry for the inconvenience!`;
-      }
+      replyText = `Hello! I am your SkillConnect support assistant. I can help with safety rules, payments, earnings, or booking tracking. What can I do for you today?\n\nIf you need urgent assistance, please call Customer Care at +1-800-555-0199 or email customercare@skillconnect.com and a support representative will reach you within 5 minutes. Sorry for the inconvenience!`;
+    }
+
+    // Dynamically translate final English response back to user's language
+    if (language !== 'en' && replyText) {
+      replyText = await translateText(replyText, 'en', language);
     }
   }
 
