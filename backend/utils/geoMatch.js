@@ -30,7 +30,8 @@ const findNearbyAvailableWorkers = async ({
   coordinates,
   maxDistanceKm = 5,
   excludedWorkerIds = [],
-  limit = 50
+  limit = 50,
+  requireOnline = false
 }) => {
   if (!coordinates || coordinates.length !== 2) {
     throw new Error('Valid [longitude, latitude] coordinates are required for geoMatch');
@@ -40,9 +41,12 @@ const findNearbyAvailableWorkers = async ({
   const maxDistanceMeters = parseFloat(maxDistanceKm) * 1000;
 
   const query = {
-    isAvailable: true,
-    isOnline: true
+    isAvailable: true
   };
+
+  if (requireOnline) {
+    query.isOnline = true;
+  }
 
   if (skill && skill !== 'All') {
     query.skill = skill;

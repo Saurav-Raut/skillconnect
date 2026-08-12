@@ -30,7 +30,8 @@ module.exports = (io) => {
         coordinates: broadcast.householdLocation,
         maxDistanceKm: broadcast.radiusKm,
         excludedWorkerIds: Array.from(broadcast.notifiedWorkerIds),
-        limit: 15
+        limit: 15,
+        requireOnline: true
       });
 
       const nextWorkers = selectNextRoundWorkers(allNearby, Array.from(broadcast.notifiedWorkerIds), 5);
