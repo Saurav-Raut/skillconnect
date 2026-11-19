@@ -59,6 +59,11 @@ exports.register = async (req, res) => {
       };
       if (coordinates && coordinates.length === 2) {
         workerPayload.location = { type: 'Point', coordinates };
+        workerPayload.currentLocation = { type: 'Point', coordinates };
+      } else {
+        // Default location (Thullur, AP) so worker appears in geo searches
+        workerPayload.location = { type: 'Point', coordinates: [80.5180, 16.5190] };
+        workerPayload.currentLocation = { type: 'Point', coordinates: [80.5180, 16.5190] };
       }
       await Worker.create(workerPayload);
     } else if (user.role === 'household') {

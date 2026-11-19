@@ -29,20 +29,49 @@ const findNearbyAvailableWorkers = async ({
     query._id = { $nin: excludedWorkerIds };
   }
 
-  query.currentLocation = {
-    $near: {
-      $geometry: {
-        type: 'Point',
-        coordinates: [lng, lat]
-      },
-      $maxDistance: maxDistanceMeters
-    }
-  };
+  // Try currentLocation first, then fall back to location field
+  let workers = [];
+  
+  try {
+    const currentLocQuery = { ...query };
+    currentLocQuery.currentLocation = {
+      $near: {
+        $geometry: {
+          type: 'Point',
+          coordinates: [lng, lat]
+        },
+        $maxDistance: maxDistanceMeters
+      }
+    };
+    workers = await Worker.find(currentLocQuery)
+      .populate('user', '-password')
+      .limit(limit)
+      .lean();
+  } catch (err) {
+    // currentLocation index may not exist or no documents match
+  }
 
-  const workers = await Worker.find(query)
-    .populate('user', '-password')
-    .limit(limit)
-    .lean();
+  // If no results from currentLocation, try the static location field
+  if (!workers || workers.length === 0) {
+    try {
+      const locQuery = { ...query };
+      locQuery.location = {
+        $near: {
+          $geometry: {
+            type: 'Point',
+            coordinates: [lng, lat]
+          },
+          $maxDistance: maxDistanceMeters
+        }
+      };
+      workers = await Worker.find(locQuery)
+        .populate('user', '-password')
+        .limit(limit)
+        .lean();
+    } catch (err) {
+      // location index may not match either
+    }
+  }
     
   // Attach distanceKm to each worker
   const workersWithDistance = workers.map(worker => {

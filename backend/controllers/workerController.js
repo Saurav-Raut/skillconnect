@@ -70,12 +70,40 @@ exports.getNearbyWorkers = async (req, res) => {
       return res.status(400).json({ success: false, error: 'Longitude and latitude are required' });
     }
 
-    const workers = await findNearbyAvailableWorkers({
-      skill,
-      coordinates: [lng, lat],
-      maxDistanceKm: maxDistance ? parseFloat(maxDistance) / 1000 : 10,
-      limit: 50
-    });
+    // First try geoMatch (searches by currentLocation)
+    let workers = [];
+    try {
+      workers = await findNearbyAvailableWorkers({
+        skill,
+        coordinates: [lng, lat],
+        maxDistanceKm: maxDistance ? parseFloat(maxDistance) / 1000 : 10,
+        limit: 50
+      });
+    } catch (geoErr) {
+      // geoMatch may fail if no workers have currentLocation indexed
+      console.log('GeoMatch fallback:', geoErr.message);
+    }
+
+    // If geoMatch returned no results, fallback to returning ALL workers
+    // (some workers may not have currentLocation set yet)
+    if (!workers || workers.length === 0) {
+      const fallbackQuery = {};
+      if (skill && skill !== 'All') fallbackQuery.skill = skill;
+      
+      const allWorkers = await Worker.find(fallbackQuery).populate('user', '-password').lean();
+      
+      // Attach distance from search point to each worker
+      const searchCoords = [parseFloat(lng), parseFloat(lat)];
+      workers = allWorkers.map(worker => {
+        let distance = null;
+        if (worker.currentLocation && worker.currentLocation.coordinates && worker.currentLocation.coordinates.length === 2) {
+          distance = calculateDistanceKm(searchCoords, worker.currentLocation.coordinates);
+        } else if (worker.location && worker.location.coordinates && worker.location.coordinates.length === 2) {
+          distance = calculateDistanceKm(searchCoords, worker.location.coordinates);
+        }
+        return { ...worker, distanceKm: distance };
+      });
+    }
 
     // Sort by highest rating first
     workers.sort((a, b) => (b.ratingAvg || 0) - (a.ratingAvg || 0));

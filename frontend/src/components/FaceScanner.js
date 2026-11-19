@@ -174,6 +174,14 @@ const FaceScanner = ({ onScanComplete, buttonText = 'Scan & Verify Face' }) => {
 
   const handleRetake = () => {
     setCapturedImage('');
+    setStatus('streaming');
+    startCamera();
+  };
+
+  // Reset scanner for a new scan (used after a successful scan if needed)
+  const resetScanner = () => {
+    setCapturedImage('');
+    setStatus('streaming');
     startCamera();
   };
 
@@ -299,9 +307,14 @@ const FaceScanner = ({ onScanComplete, buttonText = 'Scan & Verify Face' }) => {
               <CheckCircle2 size={20} />
               <span>Identity Verified Successfully</span>
             </div>
-            <button onClick={handleRetake} className="btn btn-ghost btn-sm" style={{ marginTop: '4px', fontSize: '0.8rem' }}>
-              Retake Photo
-            </button>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button onClick={handleRetake} className="btn btn-ghost btn-sm" style={{ fontSize: '0.8rem' }}>
+                Retake Photo
+              </button>
+              <button onClick={resetScanner} className="btn btn-primary btn-sm" style={{ fontSize: '0.8rem' }}>
+                Scan Again
+              </button>
+            </div>
           </div>
         )}
       </div>
