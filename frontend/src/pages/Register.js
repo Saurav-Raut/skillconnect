@@ -237,27 +237,6 @@ const Register = () => {
               </div>
 
               <div className="field" style={{ marginTop: '24px' }}>
-                <label>Government ID</label>
-                <div style={{
-                  border: '1.5px dashed var(--line-dark)', borderRadius: 'var(--radius-md)', padding: '28px 16px', textAlign: 'center', cursor: 'pointer', transition: '0.15s'
-                }}>
-                  <div style={{ width: '38px', height: '38px', borderRadius: '50%', background: 'var(--color-paper)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 10px', fontSize: '1.1rem' }}>⬆</div>
-                  <div style={{ fontSize: '0.85rem', fontWeight: 600 }}>Upload Aadhaar / Voter ID / Driving Licence</div>
-                  <div style={{ color: 'var(--text-light)', fontSize: '0.75rem', marginTop: '4px' }}>PDF or image, under 5 MB</div>
-                </div>
-              </div>
-
-              <div className="field" style={{ marginTop: '24px' }}>
-                <label>Profile photo <span style={{ color: 'var(--text-light)', fontWeight: 400 }}>(used for face verification)</span></label>
-                <div style={{
-                  border: '1.5px dashed var(--line-dark)', borderRadius: 'var(--radius-md)', padding: '28px 16px', textAlign: 'center', cursor: 'pointer', transition: '0.15s'
-                }}>
-                  <div style={{ width: '38px', height: '38px', borderRadius: '50%', background: 'var(--color-paper)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 10px', fontSize: '1.1rem' }}>📷</div>
-                  <div style={{ fontSize: '0.85rem', fontWeight: 600 }}>Take or upload a clear front-facing photo</div>
-                </div>
-              </div>
-
-              <div className="field" style={{ marginTop: '24px' }}>
                 <label>Available days</label>
                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                   {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(d => (
