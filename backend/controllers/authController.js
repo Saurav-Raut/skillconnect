@@ -9,7 +9,7 @@ const sendOTP = require('../utils/sendOTP');
 // @access  Public
 exports.register = async (req, res) => {
   try {
-    const { name, email, password, phone, role, address, city, skill, experience, ratePerHour, bio, coordinates } = req.body;
+    const { name, email, password, phone, role, address, city, skill, experience, ratePerHour, bio, coordinates, availableDays } = req.body;
 
     const cleanEmail = email ? email.toLowerCase().trim() : '';
     const cleanPhone = phone ? phone.trim() : '';
@@ -54,7 +54,8 @@ exports.register = async (req, res) => {
         skill: skill || 'Daily Laborer',
         experience: experience || 1,
         ratePerHour: ratePerHour || 100,
-        bio: bio || ''
+        bio: bio || '',
+        availableDays: Array.isArray(availableDays) && availableDays.length > 0 ? availableDays : ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
       };
       if (coordinates && coordinates.length === 2) {
         workerPayload.location = { type: 'Point', coordinates };

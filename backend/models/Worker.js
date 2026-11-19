@@ -85,6 +85,10 @@ const WorkerSchema = new mongoose.Schema({
     type: Date,
     default: null
   },
+  availableDays: {
+    type: [String],
+    default: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+  },
   createdAt: {
     type: Date,
     default: Date.now

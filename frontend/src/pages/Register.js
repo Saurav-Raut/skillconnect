@@ -29,6 +29,17 @@ const Register = () => {
   const [pricePerDay, setPricePerDay] = useState('');
   const [serviceArea, setServiceArea] = useState('');
   const [coordinates, setCoordinates] = useState(null);
+  const [availableDays, setAvailableDays] = useState(['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']);
+
+  const toggleDay = (day) => {
+    if (availableDays.includes(day)) {
+      if (availableDays.length > 1) {
+        setAvailableDays(availableDays.filter((d) => d !== day));
+      }
+    } else {
+      setAvailableDays([...availableDays, day]);
+    }
+  };
 
   // OTP Verification state
   const [showOtpScreen, setShowOtpScreen] = useState(false);
@@ -70,6 +81,7 @@ const Register = () => {
       payload.experience = 1; // default
       payload.ratePerHour = parseInt(pricePerDay) / 8 || 100;
       payload.bio = '';
+      payload.availableDays = availableDays;
       if (coordinates) payload.coordinates = coordinates;
     }
 
@@ -237,11 +249,40 @@ const Register = () => {
               </div>
 
               <div className="field" style={{ marginTop: '24px' }}>
-                <label>Available days</label>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <label style={{ margin: 0 }}>Available working days</label>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                    (Click to select/unselect)
+                  </span>
+                </div>
                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                  {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(d => (
-                    <div key={d} className="badge" style={{ cursor: 'pointer', background: ['Mon','Tue','Wed','Thu','Fri'].includes(d) ? 'var(--color-darkest)' : 'transparent', color: ['Mon','Tue','Wed','Thu','Fri'].includes(d) ? 'white' : 'var(--text-muted)', border: '1px solid var(--line-dark)', padding: '8px 14px' }}>{d}</div>
-                  ))}
+                  {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(d => {
+                    const isSelected = availableDays.includes(d);
+                    return (
+                      <button
+                        type="button"
+                        key={d}
+                        onClick={() => toggleDay(d)}
+                        className="badge"
+                        style={{
+                          cursor: 'pointer',
+                          padding: '8px 16px',
+                          borderRadius: '8px',
+                          border: isSelected ? '1px solid var(--primary, #6366f1)' : '1px solid var(--line-dark, rgba(255,255,255,0.12))',
+                          background: isSelected ? 'var(--primary, #6366f1)' : 'rgba(255, 255, 255, 0.05)',
+                          color: isSelected ? '#ffffff' : 'var(--text-muted, #94a3b8)',
+                          fontWeight: isSelected ? 600 : 500,
+                          fontSize: '0.85rem',
+                          letterSpacing: '0.04em',
+                          textTransform: 'uppercase',
+                          transition: 'all 0.15s ease',
+                          outline: 'none'
+                        }}
+                      >
+                        {d} {isSelected ? '✓' : ''}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             </>
