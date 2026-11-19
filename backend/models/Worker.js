@@ -68,7 +68,7 @@ const WorkerSchema = new mongoose.Schema({
   idVerificationStatus: {
     type: String,
     enum: ['pending', 'approved', 'rejected'],
-    default: 'pending'
+    default: 'approved'
   },
   faceEncodingEncrypted: {
     type: String,

@@ -3,13 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { Bell, Check, X, Navigation, MessageSquare, ShieldCheck, MapPin } from 'lucide-react';
 
-const SMSAlertModal = ({ onStartLiveMatchMatch }) => {
+const SMSAlertModal = () => {
   const [jobAlert, setJobAlert] = useState(null); // { bookingId, customerName, skill, amount, address, timestamp }
   const [customerSMS, setCustomerSMS] = useState(null); // { bookingId, workerName, status, message }
-  const [showDemoBtn, setShowDemoBtn] = useState(true);
   const navigate = useNavigate();
-  const { userInfo } = useSelector((state) => state.user || {});
-  const isWorker = userInfo?.role === 'worker';
 
   useEffect(() => {
     // Listen for custom SMS dispatch events from PaymentPage or demo triggers
@@ -70,29 +67,6 @@ const SMSAlertModal = ({ onStartLiveMatchMatch }) => {
   const handleRejectJob = () => {
     setJobAlert(null);
     alert('Booking request rejected. Customer will be notified and escrow refunded.');
-  };
-
-  const triggerDemoJobAlert = () => {
-    window.dispatchEvent(new CustomEvent('incomingSMSJob', {
-      detail: {
-        bookingId: 'SK9402',
-        customerName: 'Priya Sharma',
-        skill: 'Electrician Service',
-        amount: 1200,
-        address: 'Villa 12, Capital Avenue, Amaravati'
-      }
-    }));
-  };
-
-  const triggerHouseholdAcceptanceSMS = () => {
-    window.dispatchEvent(new CustomEvent('customerSMSAlert', {
-      detail: {
-        bookingId: 'SK9402',
-        workerName: 'Karthik Reddy (Verified Plumber)',
-        status: 'Accepted & En Route',
-        message: 'Worker Karthik Reddy has ACCEPTED your service booking! They are en route to your address. Escrow ₹1200 is locked.'
-      }
-    }));
   };
 
   return (
@@ -260,155 +234,7 @@ const SMSAlertModal = ({ onStartLiveMatchMatch }) => {
         </div>
       )}
 
-      {/* 3. FLOATING DEMO TRIGGER BUTTONS (SLEEK & COMPACT FOR BOTH DESKTOP & MOBILE) */}
-      <div style={{
-        position: 'fixed',
-        bottom: '10px',
-        left: '50%',
-        transform: 'translateX(-50%)',
-        zIndex: 8500,
-        display: 'flex',
-        flexDirection: 'row',
-        flexWrap: 'nowrap',
-        justifyContent: 'center',
-        gap: '6px',
-        alignItems: 'center',
-        background: 'rgba(15, 23, 42, 0.90)',
-        backdropFilter: 'blur(12px)',
-        padding: '6px 10px',
-        borderRadius: '999px',
-        border: '1px solid rgba(255, 255, 255, 0.15)',
-        boxShadow: '0 8px 24px rgba(0, 0, 0, 0.35)',
-        maxWidth: 'calc(100vw - 16px)',
-        overflowX: 'auto',
-        WebkitOverflowScrolling: 'touch'
-      }}>
-        {onStartLiveMatchMatch && (
-          <button
-            onClick={onStartLiveMatchMatch}
-            title="Initiate LiveMatch Live Matching broadcast to nearest 5 workers"
-            style={{
-              padding: '6px 10px',
-              borderRadius: '999px',
-              background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
-              color: '#fff',
-              border: '1px solid rgba(255,255,255,0.3)',
-              fontWeight: 800,
-              fontSize: '0.72rem',
-              cursor: 'pointer',
-              boxShadow: '0 4px 12px rgba(245, 158, 11, 0.4)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px',
-              transition: '0.2s',
-              whiteSpace: 'nowrap'
-            }}
-          >
-            ⚡ LiveMatch Live Match
-          </button>
-        )}
-
-        {!isWorker ? (
-          <>
-            {/* PRIMARY FOR HOUSEHOLD: Worker acceptance SMS popup */}
-            <button
-              onClick={triggerHouseholdAcceptanceSMS}
-              title="Simulate Worker accepting Household job (SMS Alert to Household)"
-              style={{
-                padding: '6px 10px',
-                borderRadius: '999px',
-                background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
-                color: '#fff',
-                border: '1px solid rgba(255,255,255,0.3)',
-                fontWeight: 800,
-                fontSize: '0.72rem',
-                cursor: 'pointer',
-                boxShadow: '0 4px 12px rgba(34, 197, 94, 0.4)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px',
-                transition: '0.2s',
-                whiteSpace: 'nowrap'
-              }}
-            >
-              💬 Accept SMS
-            </button>
-
-            {/* SECONDARY FOR HOUSEHOLD */}
-            <button
-              onClick={triggerDemoJobAlert}
-              title="Simulate Incoming Job SMS"
-              style={{
-                padding: '6px 10px',
-                borderRadius: '999px',
-                background: 'rgba(99, 102, 241, 0.25)',
-                color: '#e0e7ff',
-                border: '1px solid rgba(99, 102, 241, 0.4)',
-                fontWeight: 700,
-                fontSize: '0.72rem',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px',
-                transition: '0.2s',
-                whiteSpace: 'nowrap'
-              }}
-            >
-              🔔 Incoming Job
-            </button>
-          </>
-        ) : (
-          <>
-            {/* PRIMARY FOR WORKER: Incoming Job SMS */}
-            <button
-              onClick={triggerDemoJobAlert}
-              title="Simulate Incoming Job SMS (Broadcast Alert)"
-              style={{
-                padding: '6px 10px',
-                borderRadius: '999px',
-                background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
-                color: '#fff',
-                border: '1px solid rgba(255,255,255,0.3)',
-                fontWeight: 800,
-                fontSize: '0.72rem',
-                cursor: 'pointer',
-                boxShadow: '0 4px 12px rgba(99, 102, 241, 0.4)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px',
-                transition: '0.2s',
-                whiteSpace: 'nowrap'
-              }}
-            >
-              🔔 Incoming Job SMS
-            </button>
-
-            {/* SECONDARY FOR WORKER */}
-            <button
-              onClick={triggerHouseholdAcceptanceSMS}
-              title="Simulate Household Acceptance SMS"
-              style={{
-                padding: '6px 10px',
-                borderRadius: '999px',
-                background: 'rgba(34, 197, 94, 0.25)',
-                color: '#dcfce7',
-                border: '1px solid rgba(34, 197, 94, 0.4)',
-                fontWeight: 700,
-                fontSize: '0.72rem',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px',
-                transition: '0.2s',
-                whiteSpace: 'nowrap'
-              }}
-            >
-              💬 Accept SMS
-            </button>
-          </>
-        )}
-      </div>
-
+      {/* 3. FLOATING DEMO TRIGGER BUTTONS REMOVED */}
       <style>{`
         @keyframes slideDown {
           from { opacity: 0; transform: translateY(-20px); }

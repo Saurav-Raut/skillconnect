@@ -197,7 +197,7 @@ const AppShell = ({ children }) => {
         </div>
       </aside>
       
-      <SMSAlertModal onStartLiveMatchMatch={startLiveMatchMatchHandler} />
+      <SMSAlertModal />
 
       {/* LIVEMATCH MODALS & REAL-TIME WIRE UP */}
       <LiveMatchMatchingModal
