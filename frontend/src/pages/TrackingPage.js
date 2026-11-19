@@ -49,6 +49,23 @@ const TrackingPage = () => {
 
   useEffect(() => {
     dispatch(fetchBookings());
+
+    // Auto-refresh interval (every 3s) to sync check-in, check-out and tracking state automatically
+    const timer = setInterval(() => {
+      dispatch(fetchBookings());
+    }, 3000);
+
+    if (window.socket) {
+      const handleSocketUpdate = () => dispatch(fetchBookings());
+      window.socket.on('bookingUpdated', handleSocketUpdate);
+
+      return () => {
+        clearInterval(timer);
+        window.socket.off('bookingUpdated', handleSocketUpdate);
+      };
+    }
+
+    return () => clearInterval(timer);
   }, [dispatch]);
 
   const status = demoStatus || booking?.status || 'pending';

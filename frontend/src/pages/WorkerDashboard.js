@@ -12,6 +12,25 @@ const WorkerDashboard = () => {
 
   useEffect(() => {
     dispatch(fetchBookings());
+
+    // Auto-refresh interval (every 3.5s) to sync new requests & status without refreshing
+    const timer = setInterval(() => {
+      dispatch(fetchBookings());
+    }, 3500);
+
+    if (window.socket) {
+      const handleSocketUpdate = () => dispatch(fetchBookings());
+      window.socket.on('bookingUpdated', handleSocketUpdate);
+      window.socket.on('incomingLiveMatchRequest', handleSocketUpdate);
+
+      return () => {
+        clearInterval(timer);
+        window.socket.off('bookingUpdated', handleSocketUpdate);
+        window.socket.off('incomingLiveMatchRequest', handleSocketUpdate);
+      };
+    }
+
+    return () => clearInterval(timer);
   }, [dispatch]);
 
   const handleAccept = (bookingId) => {

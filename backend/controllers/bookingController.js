@@ -58,6 +58,10 @@ exports.createBooking = async (req, res) => {
       { bookingId: booking._id }
     );
 
+    if (global.io) {
+      global.io.emit('bookingUpdated', { bookingId: booking._id, status: booking.status });
+    }
+
     res.status(201).json({ success: true, data: booking });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
@@ -125,6 +129,10 @@ exports.acceptBooking = async (req, res) => {
       { bookingId: booking._id }
     );
 
+    if (global.io) {
+      global.io.emit('bookingUpdated', { bookingId: booking._id, status: booking.status });
+    }
+
     res.status(200).json({ success: true, data: booking });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
@@ -153,6 +161,10 @@ exports.fundBookingEscrow = async (req, res) => {
       `Payment of ₹${booking.totalAmount} for Booking has been secured. You are safe to proceed with the job.`,
       { bookingId: booking._id }
     );
+
+    if (global.io) {
+      global.io.emit('bookingUpdated', { bookingId: booking._id, status: booking.status });
+    }
 
     res.status(200).json({ success: true, data: booking });
   } catch (error) {
@@ -214,6 +226,10 @@ exports.checkInBooking = async (req, res) => {
       `${booking.worker.user.name} has face-verified and checked-in at your location. Job is in progress.`,
       { bookingId: booking._id }
     );
+
+    if (global.io) {
+      global.io.emit('bookingUpdated', { bookingId: booking._id, status: booking.status });
+    }
 
     res.status(200).json({ success: true, data: booking, verification });
   } catch (error) {
@@ -277,6 +293,10 @@ exports.checkOutBooking = async (req, res) => {
       `${booking.worker.user.name} has completed the service and face-checked out. Escrow payment released.`,
       { bookingId: booking._id }
     );
+
+    if (global.io) {
+      global.io.emit('bookingUpdated', { bookingId: booking._id, status: booking.status });
+    }
 
     res.status(200).json({ success: true, data: booking, verification });
   } catch (error) {

@@ -67,6 +67,10 @@ exports.createReview = async (req, res) => {
       );
     }
 
+    if (global.io) {
+      global.io.emit('reviewAdded', { bookingId, review });
+    }
+
     res.status(201).json({ success: true, data: review });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });

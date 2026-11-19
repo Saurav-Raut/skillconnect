@@ -9,6 +9,23 @@ const HouseholdBookingsPage = () => {
 
   useEffect(() => {
     dispatch(fetchBookings());
+
+    // Auto-refresh interval (every 3.5s) to sync booking updates without page reload
+    const timer = setInterval(() => {
+      dispatch(fetchBookings());
+    }, 3500);
+
+    if (window.socket) {
+      const handleSocketUpdate = () => dispatch(fetchBookings());
+      window.socket.on('bookingUpdated', handleSocketUpdate);
+
+      return () => {
+        clearInterval(timer);
+        window.socket.off('bookingUpdated', handleSocketUpdate);
+      };
+    }
+
+    return () => clearInterval(timer);
   }, [dispatch]);
 
   const getStatusBadge = (status) => {
