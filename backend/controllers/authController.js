@@ -11,18 +11,38 @@ exports.register = async (req, res) => {
   try {
     const { name, email, password, phone, role, address, city, skill, experience, ratePerHour, bio, coordinates } = req.body;
 
-    // Check if user already exists
-    let userExists = await User.findOne({ $or: [{ email }, { phone }] });
-    if (userExists) {
-      return res.status(400).json({ success: false, error: 'User with this email or phone already exists' });
+    const cleanEmail = email ? email.toLowerCase().trim() : '';
+    const cleanPhone = phone ? phone.trim() : '';
+
+    if (!cleanEmail) {
+      return res.status(400).json({ success: false, error: 'Email address is required and must be unique' });
     }
 
-    // Create User
+    // Edge case check: multiple users can have the same name, but email must be unique!
+    const emailExists = await User.findOne({ email: cleanEmail });
+    if (emailExists) {
+      return res.status(400).json({
+        success: false,
+        error: 'An account with this email address already exists! Email cannot be duplicate. Please use a different email or log in.'
+      });
+    }
+
+    if (cleanPhone) {
+      const phoneExists = await User.findOne({ phone: cleanPhone });
+      if (phoneExists) {
+        return res.status(400).json({
+          success: false,
+          error: 'An account with this phone number already exists! Please use a different phone number or log in.'
+        });
+      }
+    }
+
+    // Create User (name is not unique - multiple users can share the same name)
     const user = await User.create({
-      name,
-      email,
+      name: name ? name.trim() : 'User',
+      email: cleanEmail,
       password,
-      phone,
+      phone: cleanPhone,
       role: role || 'household',
       profilePicture: ''
     });
@@ -94,13 +114,15 @@ exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    const cleanEmail = email ? email.toLowerCase().trim() : '';
+
     // Validate email & password
-    if (!email || !password) {
+    if (!cleanEmail || !password) {
       return res.status(400).json({ success: false, error: 'Please provide email and password' });
     }
 
     // Check for user
-    let user = await User.findOne({ email }).select('+password');
+    let user = await User.findOne({ email: cleanEmail }).select('+password');
     if (!user) {
       // Auto-create test/demo accounts if they don't exist in database
       let role = 'household';

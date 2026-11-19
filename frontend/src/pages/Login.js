@@ -6,7 +6,6 @@ import { loginUser, clearError } from '../redux/userSlice';
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [roleMode, setRoleMode] = useState('household');
   
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -89,21 +88,6 @@ const Login = () => {
           <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '28px' }}>
             New here? <Link to="/register" style={{ color: 'var(--warning)', fontWeight: 700 }}>Create an account</Link>
           </p>
-
-          <div className="select-pill-group" style={{ marginBottom: '26px' }}>
-            <div 
-              className={`select-pill ${roleMode === 'household' ? 'active' : ''}`}
-              onClick={() => setRoleMode('household')}
-            >
-              Household
-            </div>
-            <div 
-              className={`select-pill ${roleMode === 'worker' ? 'active' : ''}`}
-              onClick={() => setRoleMode('worker')}
-            >
-              Worker
-            </div>
-          </div>
 
           {error && (
             <div style={{

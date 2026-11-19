@@ -53,21 +53,21 @@ const Register = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    const cleanEmail = email ? email.toLowerCase().trim() : '';
     const payload = {
-      name,
-      email: email || `${phone}@temp.com`, // dummy email if optional is left blank
-      phone,
-      password: password || 'defaultPass123', // if password isn't in UI, give default
+      name: name.trim(),
+      email: cleanEmail,
+      phone: phone.trim(),
+      password,
       role
     };
 
     if (role === 'household') {
-      payload.address = address;
-      payload.city = locality;
-      if (coordinates) payload.coordinates = coordinates;
+      payload.address = 'Not specified';
+      payload.city = 'Thullur';
     } else {
       payload.skill = skill;
-      payload.experience = 1; // default since PDF doesn't have it
+      payload.experience = 1; // default
       payload.ratePerHour = parseInt(pricePerDay) / 8 || 100;
       payload.bio = '';
       if (coordinates) payload.coordinates = coordinates;
@@ -162,8 +162,8 @@ const Register = () => {
                   <input className="input" type="tel" placeholder="+91 98765 43210" value={phone} onChange={(e)=>setPhone(e.target.value)} required />
                 </div>
                 <div className="field">
-                  <label>Email <span style={{ color: 'var(--text-light)', fontWeight: 400 }}>(optional)</span></label>
-                  <input className="input" type="email" placeholder="you@example.com" value={email} onChange={(e)=>setEmail(e.target.value)} />
+                  <label>Email Address <span style={{ color: 'var(--text-light)', fontWeight: 400 }}>(must be unique)</span></label>
+                  <input className="input" type="email" placeholder="you@example.com" value={email} onChange={(e)=>setEmail(e.target.value)} required />
                 </div>
               </div>
 
@@ -171,17 +171,6 @@ const Register = () => {
                 <label>Set Password</label>
                 <input className="input" type="password" placeholder="••••••••" value={password} onChange={(e)=>setPassword(e.target.value)} required />
               </div>
-
-              <div className="field" style={{ marginTop: '24px' }}>
-                <label>Home address</label>
-                <input className="input" placeholder="House / street" style={{ marginBottom: '10px' }} value={address} onChange={(e)=>setAddress(e.target.value)} required />
-                <div className="input-row">
-                  <input className="input" placeholder="Locality" value={locality} onChange={(e)=>setLocality(e.target.value)} required />
-                  <input className="input" placeholder="Pincode" value={pincode} onChange={(e)=>setPincode(e.target.value)} required />
-                </div>
-              </div>
-
-
             </>
           ) : (
             <>
@@ -197,8 +186,8 @@ const Register = () => {
               </div>
               
               <div className="field">
-                <label>Email <span style={{ color: 'var(--text-light)', fontWeight: 400 }}>(optional)</span></label>
-                <input className="input" type="email" placeholder="you@example.com" value={email} onChange={(e)=>setEmail(e.target.value)} />
+                <label>Email Address <span style={{ color: 'var(--text-light)', fontWeight: 400 }}>(must be unique)</span></label>
+                <input className="input" type="email" placeholder="you@example.com" value={email} onChange={(e)=>setEmail(e.target.value)} required />
               </div>
               
               <div className="field">
