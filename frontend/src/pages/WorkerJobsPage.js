@@ -90,24 +90,33 @@ const WorkerJobsPage = () => {
   const completedJobs = bookingsList ? bookingsList.filter((b) => b.status === 'completed') : [];
 
   // Match reviews to this worker
+  const myWorkerId = bookingsList?.[0]?.worker?._id || bookingsList?.[0]?.worker;
   const workerReviews = reviews.filter((r) => {
-    const wId = r.worker?._id || r.worker;
-    const uId = r.worker?.user?._id || r.worker?.user;
-    return wId === userInfo?._id || uId === userInfo?._id || !wId; // Show all or worker-matched
+    if (r.isReverseReview) return false; // Ignore reviews worker gave to household
+    const rWorkerUserId = r.worker?.user?._id || r.worker?.user;
+    const rWorkerId = r.worker?._id || r.worker;
+    return (
+      (rWorkerUserId && rWorkerUserId.toString() === userInfo?._id?.toString()) ||
+      (rWorkerId && myWorkerId && rWorkerId.toString() === myWorkerId.toString()) ||
+      (rWorkerId && rWorkerId.toString() === userInfo?._id?.toString())
+    );
   });
 
   // Helper to find review for a specific booking
   const getReviewForBooking = (bookingId) => {
     return reviews.find((r) => {
+      if (r.isReverseReview) return false;
       const bId = r.booking?._id || r.booking;
-      return bId === bookingId;
+      return bId?.toString() === bookingId?.toString();
     });
   };
 
   // Calculate worker overall average rating
   const avgRating = workerReviews.length > 0
     ? (workerReviews.reduce((sum, r) => sum + (r.rating || 5), 0) / workerReviews.length).toFixed(1)
-    : (userInfo?.workerProfile?.ratingAvg || 5.0).toFixed(1);
+    : (completedJobs.length > 0 ? '5.0' : 'New');
+
+  const workerSkill = bookingsList?.[0]?.worker?.skill || bookingsList?.[0]?.skill || 'Service Professional';
 
   return (
     <div className="fade-in">
@@ -158,11 +167,11 @@ const WorkerJobsPage = () => {
             <input type="file" accept="image/*" ref={fileInputRef} onChange={handleAvatarUpload} style={{ display: 'none' }} />
 
             <div className="heading" style={{ fontSize: '1.4rem' }}>{userInfo?.name || 'Worker Name'}</div>
-            <div style={{ color: 'var(--text-light)', fontSize: '0.9rem', marginBottom: '16px' }}>Professional Electrician</div>
+            <div style={{ color: 'var(--text-light)', fontSize: '0.9rem', marginBottom: '16px' }}>{workerSkill}</div>
             <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', flexWrap: 'wrap' }}>
               <span className="badge badge-verified">ID Verified</span>
               <span className="badge" style={{ background: 'rgba(255,180,0,0.15)', color: '#ffb400', fontWeight: 800, border: '1px solid rgba(255,180,0,0.3)' }}>
-                ★ {avgRating} ({workerReviews.length || completedJobs.length} reviews)
+                ★ {avgRating} ({workerReviews.length} {workerReviews.length === 1 ? 'review' : 'reviews'})
               </span>
             </div>
           </div>
@@ -170,12 +179,12 @@ const WorkerJobsPage = () => {
           <div className="card">
             <div style={{ fontWeight: 700, marginBottom: '12px' }}>Bio & Experience</div>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', lineHeight: '1.6', marginBottom: '16px' }}>
-              I have over 5 years of experience in residential and commercial electrical work. I specialize in wiring, fan installations, and appliance repairs. I take pride in providing safe, reliable, and prompt service to all my clients.
+              {bookingsList?.[0]?.worker?.bio || 'Certified and background-verified service professional. Providing safe, prompt, and reliable service to households.'}
             </p>
             <div style={{ fontSize: '0.85rem', color: 'var(--text-light)', lineHeight: '1.8' }}>
-              <strong>Experience:</strong> 5+ Years<br/>
-              <strong>Jobs completed:</strong> {completedJobs.length || 2}+<br/>
-              <strong>Languages:</strong> Telugu, English, Hindi
+              <strong>Trade:</strong> {workerSkill}<br/>
+              <strong>Jobs completed:</strong> {completedJobs.length}<br/>
+              <strong>Status:</strong> Active & Verified
             </div>
           </div>
         </div>
@@ -284,73 +293,25 @@ const WorkerJobsPage = () => {
             {/* Reviews List */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               {workerReviews.length === 0 ? (
-                <>
-                  <div style={{
-                    padding: '16px 20px',
-                    borderRadius: '12px',
-                    background: 'var(--bg-main)',
-                    border: '1px solid var(--line)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '8px'
-                  }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <div style={{
-                          width: '34px', height: '34px', borderRadius: '50%',
-                          background: 'var(--primary)', color: '#fff',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          fontWeight: 700, fontSize: '0.85rem'
-                        }}>
-                          H
-                        </div>
-                        <div>
-                          <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>Himanshu (Household)</div>
-                          <div style={{ color: 'var(--text-muted)', fontSize: '0.72rem' }}>Verified Booking · Thullur</div>
-                        </div>
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#ffb400', fontWeight: 800 }}>
-                        <Star size={15} fill="#ffb400" /> 5.0
-                      </div>
-                    </div>
-                    <p style={{ margin: 0, color: 'var(--text-main)', fontSize: '0.88rem', lineHeight: '1.5' }}>
-                      "Saurav was on time, very professional, and repaired our ceiling fan wiring in under 45 minutes. Highly recommended!"
-                    </p>
+                <div style={{
+                  padding: '36px 20px',
+                  textAlign: 'center',
+                  background: 'var(--bg-main, #0b1120)',
+                  borderRadius: '12px',
+                  border: '1px dashed var(--line, rgba(255,255,255,0.15))',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}>
+                  <MessageSquare size={32} style={{ opacity: 0.4, color: 'var(--text-muted)' }} />
+                  <div style={{ fontWeight: 600, fontSize: '0.95rem', color: 'var(--text-main)' }}>
+                    No customer reviews yet
                   </div>
-
-                  <div style={{
-                    padding: '16px 20px',
-                    borderRadius: '12px',
-                    background: 'var(--bg-main)',
-                    border: '1px solid var(--line)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '8px'
-                  }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <div style={{
-                          width: '34px', height: '34px', borderRadius: '50%',
-                          background: '#10b981', color: '#fff',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          fontWeight: 700, fontSize: '0.85rem'
-                        }}>
-                          S
-                        </div>
-                        <div>
-                          <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>Shivam (Household)</div>
-                          <div style={{ color: 'var(--text-muted)', fontSize: '0.72rem' }}>Verified Booking · Amaravati</div>
-                        </div>
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#ffb400', fontWeight: 800 }}>
-                        <Star size={15} fill="#ffb400" /> 5.0
-                      </div>
-                    </div>
-                    <p style={{ margin: 0, color: 'var(--text-main)', fontSize: '0.88rem', lineHeight: '1.5' }}>
-                      "Excellent service! Solved our electrical tripping issue safely and explained the problem clearly. Very polite behavior."
-                    </p>
+                  <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', maxWidth: '400px' }}>
+                    Real verified reviews and ratings submitted by households will appear here automatically when jobs are completed.
                   </div>
-                </>
+                </div>
               ) : (
                 workerReviews.map((r, i) => (
                   <div key={r._id || i} style={{
